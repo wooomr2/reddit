@@ -1,34 +1,102 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+## Deploy 주소
 
-## Getting Started
 
-First, run the development server:
+## Next.js, TypeScript, Firebase, ChakraUI
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+* firebase Function
+- Serverless Backend Code 실행
+ 
+* 상태관리 Recoil, contextAPI
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## SQL
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+Users
+id PK
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+UserCommunities
+id PK
+userId FK
+communityId FK
 
-## Learn More
+Communities
+id PK
 
-To learn more about Next.js, take a look at the following resources:
+## noSql
+<Option1>
+user = {
+  id,
+  communities: [communityId]
+}
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+community = {
+  id,
+  users: [userId] ===> user많아지면 array처리 비효율
+}
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+<Option2>
+추가
+userCommunity = {
+  userId,
+  communityId
+} ===>firebase에서 불가능
 
-## Deploy on Vercel
+<Option3으로 결정>
+user = {
+  id,
+  communitySnippets: [{
+    communityId
+    photoURL,
+    communityName
+  }]
+}
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+community = {
+  id,
+  numOfMembers: Number,
+}
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+
+# Custom-Hook:  useCommunity 3개 컴포넌트에 적용
+
+<Communnity-Header>
+communityState.mySnippets
+joinCommunity
+leaveCommunity
+
+<MyCommunitiesDropdown>
+communityState.mySnippets
+
+<TopCommunities>
+communityState.mySnippets
+joinCommunity
+leaveCommunity
+
+
+# Firebase Transaction / batch
+-Transaction : set of read and write
+-Batch :set of write
+
+
+# 6-14 firebase 백엔드 코드와 프론트 분리가 쉽지 않다
+
+- firestore,firestorage와 연동되는 백엔드 코드
+   customHook으로 만들어 별도 관리
+
+- model(dto) 별도 폴더로 관리하자 사이즈 커지니까 찾기 귀찮
+
+# 폴더구조 컴포넌트명 정리
+- Community --> Widget
+  -About --> Widget
+  -About 내 관리자 커뮤니티 이미지 변경기능 ---> ManagerOption으로 분리
+  
+- Navbar --> Header
+- RightContent --> Right
+
+
+- Comments Post에서 독립
+
+
+
+---firebase
+communitySnippets --> userCommunities로 바꾸는게 안좋나
