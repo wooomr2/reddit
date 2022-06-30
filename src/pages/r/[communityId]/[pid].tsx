@@ -1,76 +1,50 @@
 import { User } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
 import { useRouter } from "next/router";
 import React, { useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { Post } from "../../../atoms/postAtom";
-import About from "../../../components/Community/About";
-import PageContent from "../../../components/Layout/PageContent";
-import Comments from "../../../components/Post/Comments/Comments";
-import PostItem from "../../../components/Post/PostItem";
-import { auth, firestore } from "../../../firebase/clientApp";
-import useCommunity from "../../../hooks/useCommunity";
+import { useRecoilValue } from "recoil";
+import { communityState } from "../../../atoms/communityAtom";
+import { postState } from "../../../atoms/postAtom";
+import Comments from "../../../components/Comments/Comments";
+import NotFound from "../../../components/Community/NotFound";
+import ContentLayout from "../../../components/Layout/ContentLayout";
+import PostItem from "../../../components/Post/PostItem/PostItem";
+import AboutCommunity from "../../../components/Widget/AboutCommunity";
+import { auth } from "../../../firebase/clientApp";
 import usePost from "../../../hooks/usePost";
 
 const PostPage: React.FC = () => {
-  const router = useRouter();
+  const { pid } = useRouter().query;
   const [user] = useAuthState(auth);
-  const { mySnippets } = useCommunity();
-  const { postItems, setPostItems, onDeletePost, onVote } = usePost();
-  const { selectedPost, postVotes } = postItems;
-  const { communityId, pid } = router.query;
+  const currentCommunity = useRecoilValue(communityState).currentCommunity;
+  const { getPost } = usePost();
+  const selectedPost = useRecoilValue(postState).selectedPost;
 
   //새로고침 시 다시 getPost
   useEffect(() => {
     if (pid && !selectedPost) {
-      getPost();
+      getPost(pid as string);
     }
   }, [pid, selectedPost]);
 
-  const getPost = async () => {
-    try {
-      const postDocRef = doc(firestore, "posts", pid as string);
-      const postDoc = await getDoc(postDocRef);
-
-      setPostItems((prev) => ({
-        ...prev,
-        selectedPost: { id: postDoc.id, ...postDoc.data() } as Post,
-      }));
-    } catch (error) {
-      console.log("getPost error", error);
-    }
-  };
-
+  if (!currentCommunity) return <NotFound />;
   return (
-    <PageContent>
+    <ContentLayout>
       {/* Left */}
-      <>
-        {selectedPost && (
-          <>
-            <PostItem
-              post={selectedPost}
-              userIsCreator={user?.uid === selectedPost?.creatorId}
-              userVote={
-                postVotes.find((item) => item.postId === selectedPost.id)?.vote
-              }
-              onVote={onVote}
-              onDeletePost={onDeletePost}
-            />
-            <Comments
-              user={user as User}
-              selectedPost={selectedPost}
-              communityId={selectedPost?.communityId as string}
-            />
-          </>
-        )}
-      </>
+      {selectedPost && (
+        <>
+          <PostItem post={selectedPost} isSinglePost={true} />
+          <Comments
+            user={user as User}
+            selectedPost={selectedPost}
+            communityId={selectedPost?.communityId as string}
+          />
+        </>
+      )}
+
       {/* Right */}
-      <>
-        {mySnippets.currentCommunity && (
-          <About community={mySnippets.currentCommunity} />
-        )}
-      </>
-    </PageContent>
+      <AboutCommunity community={currentCommunity} />
+    </ContentLayout>
   );
 };
 export default PostPage;

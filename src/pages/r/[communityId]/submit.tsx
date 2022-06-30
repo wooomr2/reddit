@@ -1,34 +1,26 @@
-import { Box, Text } from "@chakra-ui/react";
 import React from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useRecoilValue } from "recoil";
 import { communityState } from "../../../atoms/communityAtom";
-import About from "../../../components/Community/About";
-import PageContent from "../../../components/Layout/PageContent";
-import NewPostForm from "../../../components/Post/PostForm/NewPostForm";
+import NotFound from "../../../components/Community/NotFound";
+import ContentLayout from "../../../components/Layout/ContentLayout";
+import PostForm from "../../../components/Post/PostForm/PostForm";
+import Premium from "../../../components/Widget/Premium";
 import { auth } from "../../../firebase/clientApp";
-import useCommunity from "../../../hooks/useCommunity";
 
 const Submit: React.FC = () => {
   const [user] = useAuthState(auth);
-  const { mySnippets } = useCommunity();
+  const currentCommunity = useRecoilValue(communityState).currentCommunity;
 
+  if (!currentCommunity || !user) return <NotFound />;
   return (
-    <PageContent>
+    <ContentLayout>
       {/* Left */}
-      <>
-        {/* <Box p="14px 0px" borderBottom="1px solid" borderColor="white">
-          <Text>Create a post</Text>
-        </Box> */}
-        {user && <NewPostForm user={user} communityImageURL={mySnippets.currentCommunity?.imageURL}/>}
-      </>
+      <PostForm user={user} communityImageURL={currentCommunity?.imageURL} />
+
       {/* Right */}
-      <>
-        {mySnippets.currentCommunity && (
-          <About community={mySnippets.currentCommunity} />
-        )}
-      </>
-    </PageContent>
+      <Premium />
+    </ContentLayout>
   );
 };
 export default Submit;

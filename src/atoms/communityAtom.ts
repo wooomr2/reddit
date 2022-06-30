@@ -1,33 +1,19 @@
-import { Timestamp } from "@google-cloud/firestore";
 import { atom } from "recoil";
+import { Community } from "../models/Community";
+import { CommunitySnippet } from "../models/User/CommunitySnippet";
 
-export interface Community {
-  id: string;
-  creatorId: string;
-  numberOfMembers: number;
-  privacyType: "public" | "restricted" | "private";
-  createdAt: Timestamp;
-  imageURL?: string;
-}
-
-export interface CommunitySnippet {
-  communityId?: string;
-  isModerator?: boolean;
-  imageURL?: string;
-}
-
-interface MySnippets {
+interface CommunityAtom {
   communitySnippets: CommunitySnippet[];
   currentCommunity?: Community;
   isSnippetsFetched?: boolean;
 }
 
-const defaultCommunityState: MySnippets = {
+const defaultCommunityState: CommunityAtom = {
   communitySnippets: [],
   isSnippetsFetched: false,
 };
 
-export const communityState = atom<MySnippets>({
+export const communityState = atom<CommunityAtom>({
   key: "communityState",
   default: defaultCommunityState,
 });

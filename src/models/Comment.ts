@@ -7,6 +7,6 @@ export type Comment = {
   communityId: string;
   postId: string;
   postTitle: string;
-  text: string; //reply로고칠까
+  text: string;
   createdAt: Timestamp;
 };

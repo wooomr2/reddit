@@ -4,73 +4,79 @@ import {
   getDoc,
   getDocs,
   increment,
+  limit,
+  orderBy,
+  query,
+  runTransaction,
+  serverTimestamp,
+  updateDoc,
   writeBatch,
 } from "firebase/firestore";
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { getDownloadURL, ref, uploadString } from "firebase/storage";
+import router from "next/router";
+import { useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { useRecoilState } from "recoil";
-import {
-  Community,
-  CommunitySnippet,
-  communityState,
-} from "../atoms/communityAtom";
+import { useRecoilState, useSetRecoilState } from "recoil";
+import { communityState } from "../atoms/communityAtom";
 import { modalState } from "../atoms/modalAtom";
-import { auth, firestore } from "../firebase/clientApp";
+import { auth, firestore, storage } from "../firebase/clientApp";
+import { Community } from "../models/Community";
+import { CommunitySnippet } from "../models/User/CommunitySnippet";
 
 const useCommunity = () => {
-  const router = useRouter();
   const [user] = useAuthState(auth);
-  const [modal, setModal] = useRecoilState(modalState);
-  const [mySnippets, setMySnippets] = useRecoilState(communityState);
+  const setModalAtom = useSetRecoilState(modalState);
+  const [communityAtom, setCommunityAtom] = useRecoilState(communityState);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (!user) {
-      //Clear user communitySnippets in recoilState
-      setMySnippets((prev) => ({
-        ...prev,
-        communitySnippets: [],
-        isSnippetsFetched: false,
-      }));
-      return;
-    }
-    getMySnippets();
-  }, [user]);
-
-  const getMySnippets = async () => {
+  const getCommunitySnippets = async () => {
     setLoading(true);
     try {
       const snippetDocs = await getDocs(
         collection(firestore, `users/${user?.uid}/communitySnippets`)
       );
       const snippets = snippetDocs.docs.map((doc) => ({ ...doc.data() }));
-      setMySnippets((prev) => ({
+      setCommunityAtom((prev) => ({
         ...prev,
         communitySnippets: snippets as CommunitySnippet[],
         isSnippetsFetched: true,
       }));
     } catch (error: any) {
-      console.log("getMySnippets error", error);
+      console.log("getCommunitySnippets error", error);
       setError(error.message);
     }
     setLoading(false);
   };
 
-  useEffect(() => {
-    const { communityId } = router.query;
-    if (communityId && !mySnippets.currentCommunity) {
-      getCommunity(communityId as string);
+  const getCommunities = async (
+    setCommunities: React.Dispatch<React.SetStateAction<Community[]>>,
+    lim: number
+  ) => {
+    try {
+      const communityQuery = query(
+        collection(firestore, "communities"),
+        orderBy("numberOfMembers", "desc"),
+        limit(lim)
+      );
+      const communityDocs = await getDocs(communityQuery);
+      const communities = communityDocs.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Community[];
+
+      setCommunities(communities);
+    } catch (error) {
+      console.log("getCommunityRecommendation error", error);
     }
-  }, [router.query, mySnippets.currentCommunity]);
+  };
 
   const getCommunity = async (communityId: string) => {
     try {
       const communityDocRef = doc(firestore, "communities", communityId);
       const communityDoc = await getDoc(communityDocRef);
 
-      setMySnippets((prev) => ({
+      setCommunityAtom((prev) => ({
         ...prev,
         currentCommunity: {
           id: communityDoc.id,
@@ -82,9 +88,95 @@ const useCommunity = () => {
     }
   };
 
+  const createCommunity = async (
+    communityName: string,
+    communityType: string,
+    handleClose: () => void
+  ) => {
+    try {
+      const communityDocRef = doc(firestore, "communities", communityName);
+
+      const newSnippet: CommunitySnippet = {
+        communityId: communityName,
+        isModerator: true,
+      };
+
+      await runTransaction(firestore, async (transaction) => {
+        const communityDoc = await transaction.get(communityDocRef);
+
+        if (communityDoc.exists()) {
+          throw new Error(`Sorry, r/${communityName} is taken. Try another.`);
+        }
+
+        transaction.set(communityDocRef, {
+          creatorId: user?.uid,
+          numberOfMembers: 1,
+          privacyType: communityType,
+          createdAt: serverTimestamp(),
+        });
+        transaction.set(
+          doc(firestore, `users/${user?.uid}/communitySnippets`, communityName),
+          newSnippet
+        );
+      });
+      
+
+      setCommunityAtom((prev) => ({
+        ...prev,
+        communitySnippets: [...prev.communitySnippets, newSnippet],
+      }));
+
+      router.push(`r/${communityName}`);
+
+      handleClose();
+    } catch (error: any) {
+      console.log("Transaction Error", error);
+    }
+  };
+
+  const updateCommunityImage = async (
+    communityId: string,
+    selectedFile?: string | undefined
+  ) => {
+    if (!selectedFile) return;
+    try {
+      const imageRef = ref(storage, `communities/${communityId}/image`);
+
+      await uploadString(imageRef, selectedFile, "data_url");
+
+      const downloadURL = await getDownloadURL(imageRef);
+
+      await updateDoc(doc(firestore, "communities", communityId), {
+        imageURL: downloadURL,
+      });
+
+      await updateDoc(
+        doc(firestore, `users/${user?.uid}/communitySnippets`, communityId),
+        {
+          imageURL: downloadURL,
+        }
+      );
+
+      setCommunityAtom((prev) => ({
+        ...prev,
+        communitySnippets: [...prev.communitySnippets].map((snippets) =>
+          snippets.communityId === communityId
+            ? { ...snippets, imageURL: downloadURL }
+            : snippets
+        ),
+        currentCommunity: {
+          ...prev.currentCommunity,
+          imageURL: downloadURL,
+        } as Community,
+      }));
+    } catch (error: any) {
+      console.log("updateImage error", error.message);
+    }
+  };
+
   const onJoinOrLeaveCommunity = (community: Community, isJoined: boolean) => {
     if (!user) {
-      setModal({ open: true, view: "login" });
+      setModalAtom({ open: true, view: "login" });
       return;
     }
     if (isJoined) {
@@ -120,7 +212,7 @@ const useCommunity = () => {
       await batch.commit();
 
       // update recoilState
-      setMySnippets((prev) => ({
+      setCommunityAtom((prev) => ({
         ...prev,
         communitySnippets: [...prev.communitySnippets, newSnippet],
       }));
@@ -151,7 +243,7 @@ const useCommunity = () => {
       await batch.commit();
 
       // update recoilState
-      setMySnippets((prev) => ({
+      setCommunityAtom((prev) => ({
         ...prev,
         communitySnippets: prev.communitySnippets.filter(
           (snippet) => snippet.communityId !== communityId
@@ -166,8 +258,13 @@ const useCommunity = () => {
   };
 
   return {
+    getCommunitySnippets,
+    getCommunities,
+    getCommunity,
+    createCommunity,
+    updateCommunityImage,
     onJoinOrLeaveCommunity,
-    mySnippets,
+    communityAtom,
     loading,
     error,
   };

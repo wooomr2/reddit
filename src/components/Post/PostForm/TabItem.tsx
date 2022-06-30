@@ -1,14 +1,14 @@
 import { Flex, Icon, Text } from "@chakra-ui/react";
 import React from "react";
 
-type TabItemProps = {
+type Props = {
   title: string;
   icon: typeof Icon.arguments;
   selected: boolean;
   setSelectedTab: (value: string) => void;
 };
 
-const TabItem: React.FC<TabItemProps> = ({
+const TabItem: React.FC<Props> = ({
   title,
   icon,
   selected,

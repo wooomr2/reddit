@@ -1,40 +1,22 @@
-import { Timestamp } from "firebase/firestore";
 import { atom } from "recoil";
+import { Post } from "../models/Post";
+import { PostVote } from "../models/User/PostVote";
 
-export type Post = {
-  id: string;
-  communityId: string;
-  creatorId: string;
-  creatorDisplayName: string;
-  title: string;
-  body: string;
-  numberOfComments: number;
-  totalVote: number;
-  imageURLs?: string[];
-  communityImageURL?: string;
-  createdAt: Timestamp;
-};
-
-export type PostVote = {
-  id?: string;
-  postId: string;
-  communityId: string;
-  vote: 1 | -1;
-};
-
-interface PostItems {
+interface PostAtom {
   selectedPost: Post | null;
+  selectedPostVote: PostVote | null;
   posts: Post[];
-  postVotes: PostVote[],
+  postVotes: PostVote[];
 }
 
-const defaultPostState: PostItems = {
+const defaultPostState: PostAtom = {
   selectedPost: null,
+  selectedPostVote: null,
   posts: [],
   postVotes: [],
 };
 
-export const postState = atom<PostItems>({
+export const postState = atom<PostAtom>({
   key: "postState",
   default: defaultPostState,
 });

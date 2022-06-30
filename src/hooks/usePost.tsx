@@ -1,43 +1,144 @@
+import { User } from "firebase/auth";
 import {
+  addDoc,
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
+  limit,
+  orderBy,
   query,
+  serverTimestamp,
+  Timestamp,
+  updateDoc,
   where,
   writeBatch,
 } from "firebase/firestore";
-import { deleteObject, ref } from "firebase/storage";
+import {
+  deleteObject,
+  getDownloadURL,
+  ref,
+  uploadString,
+} from "firebase/storage";
 import { useRouter } from "next/router";
-import React, { useEffect } from "react";
+import { useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { communityState } from "../atoms/communityAtom";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import { modalState } from "../atoms/modalAtom";
-import { Post, postState, PostVote } from "../atoms/postAtom";
+import { postState } from "../atoms/postAtom";
 import { auth, firestore, storage } from "../firebase/clientApp";
+import { Post } from "../models/Post";
+import { CommunitySnippet } from "../models/User/CommunitySnippet";
+import { PostVote } from "../models/User/PostVote";
 
 const usePost = () => {
   const router = useRouter();
-  const [postItems, setPostItems] = useRecoilState(postState);
   const [user] = useAuthState(auth);
-  const currentCommunity = useRecoilValue(communityState).currentCommunity;
-  const setModal = useSetRecoilState(modalState);
+  const [postAtom, setPostAtom] = useRecoilState(postState);
+  const setModalAtom = useSetRecoilState(modalState);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (!user) {
-      //Clear user PostVotes in recoilState
-      setPostItems((prev) => ({
+  const getHomeFeed = async () => {
+    setLoading(true);
+    try {
+      const postQuery = query(
+        collection(firestore, "posts"),
+        orderBy("totalVote", "desc"),
+        limit(10)
+      );
+
+      const postDocs = await getDocs(postQuery);
+      const posts = postDocs.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+      setPostAtom((prev) => ({
         ...prev,
-        postVotes: [],
+        posts: posts as Post[],
       }));
+    } catch (error) {
+      console.log("getNoUserHomeFeeds error", error);
     }
-  }, [user]);
+    setLoading(false);
+  };
 
-  useEffect(() => {
-    if (!user || !currentCommunity?.id) return;
-    getPostVotes(currentCommunity?.id);
-  }, [user, currentCommunity]);
+  const getUserHomeFeed = async (communitySnippets: CommunitySnippet[]) => {
+    setLoading(true);
+    try {
+      if (communitySnippets.length) {
+        const myCommunityIds = communitySnippets.map(
+          (snippet) => snippet.communityId
+        );
+
+        const postQuery = query(
+          collection(firestore, "posts"),
+          where("communityId", "in", myCommunityIds),
+          orderBy("totalVote", "desc"),
+          limit(10)
+        );
+
+        const postDocs = await getDocs(postQuery);
+        const posts = postDocs.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        const postIds = postDocs.docs.map((doc) => doc.id);
+
+        const postVotesQuery = query(
+          collection(firestore, `users/${user?.uid}/postVotes`),
+          where("postId", "in", postIds)
+        );
+
+        const postVotesDocs = await getDocs(postVotesQuery);
+        const postVotes = postVotesDocs.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setPostAtom((prev) => ({
+          ...prev,
+          posts: posts as Post[],
+          postVotes: postVotes as PostVote[],
+        }));
+      }
+    } catch (error) {
+      console.log("getUserHomeFeeds error", error);
+    }
+    setLoading(false);
+  };
+
+  const getCommunityFeed = async (communtyId: string) => {
+    setLoading(true);
+    try {
+      const postsQuery = query(
+        collection(firestore, "posts"),
+        where("communityId", "==", communtyId),
+        orderBy("createdAt", "desc")
+      );
+      const postDocs = await getDocs(postsQuery);
+
+      const posts = postDocs.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+      const postVotesQuery = query(
+        collection(firestore, `users/${user?.uid}/postVotes`),
+        where("communityId", "==", communtyId)
+      );
+      const postVoteDocs = await getDocs(postVotesQuery);
+      const postVotes = postVoteDocs.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setPostAtom((prev) => ({
+        ...prev,
+        posts: posts as Post[],
+        postVotes: postVotes as PostVote[],
+      }));
+    } catch (error) {
+      console.log("getFeeds error", error);
+    }
+    setLoading(false);
+  };
 
   const getPostVotes = async (communtyId: string) => {
     const postVotesQuery = query(
@@ -50,27 +151,139 @@ const usePost = () => {
       ...doc.data(),
     }));
 
-    setPostItems((prev) => ({
+    setPostAtom((prev) => ({
       ...prev,
       postVotes: postVotes as PostVote[],
     }));
   };
 
+  const getPosts = async (communtyId: string) => {
+    setLoading(true);
+    try {
+      const postsQuery = query(
+        collection(firestore, "posts"),
+        where("communityId", "==", communtyId),
+        orderBy("createdAt", "desc")
+      );
+      const postDocs = await getDocs(postsQuery);
+
+      const posts = postDocs.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+      setPostAtom((prev) => ({
+        ...prev,
+        posts: posts as Post[],
+      }));
+    } catch (error) {
+      console.log("getPosts error", error);
+    }
+    setLoading(false);
+  };
+
+  const getPost = async (pid: string) => {
+    try {
+      const postDocRef = doc(firestore, "posts", pid);
+      const postDoc = await getDoc(postDocRef);
+
+      setPostAtom((prev) => ({
+        ...prev,
+        selectedPost: { id: postDoc.id, ...postDoc.data() } as Post,
+      }));
+    } catch (error) {
+      console.log("getPost error", error);
+    }
+  };
+
+  const getPostVote = async (pid: string) => {
+    try {
+      const postVoteQuery = query(
+        collection(firestore, `users/${user?.uid}/postVotes`),
+        where("postId", "==", pid)
+      );
+      const postVoteDocs = await getDocs(postVoteQuery);
+
+      const postVote = postVoteDocs.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setPostAtom((prev) => ({
+        ...prev,
+        postVote: postVote as PostVote[],
+      }));
+    } catch (error) {
+      console.log("getPostVote error", error);
+    }
+  };
+
+  const createPost = async (
+    user: User,
+    textInputs: { title: string; body: string },
+    selectedFiles: string[],
+    communityImageURL?: string
+  ) => {
+    const { communityId } = router.query;
+
+    setLoading(true);
+    try {
+      //CREATE new Post
+      const postDocRef = await addDoc(collection(firestore, "posts"), {
+        communityId: communityId as string,
+        communityImageURL: communityImageURL || "",
+        creatorId: user?.uid,
+        creatorDisplayName: user?.email!.split("@")[0],
+        title: textInputs.title,
+        body: textInputs.body,
+        numberOfComments: 0,
+        totalVote: 0,
+        createdAt: serverTimestamp() as Timestamp,
+      });
+
+      //firestore - firestorage 간 transaction은 ?
+      // 자체 기능 x ==> firebase function 트리거 생성할 것
+
+      //save Images at firestorage
+      const imageURLs = [];
+      if (selectedFiles) {
+        let i = 0;
+        for (let file of selectedFiles) {
+          const imageRef = ref(storage, `posts/${postDocRef.id}/image${i}`);
+
+          await uploadString(imageRef, file, "data_url");
+
+          const downloadURL = await getDownloadURL(imageRef);
+          imageURLs.push(downloadURL);
+
+          i++;
+        }
+        //firestorage imageURL firestore에 업데이트
+        await updateDoc(postDocRef, {
+          imageURLs: imageURLs,
+        });
+      }
+      router.back();
+    } catch (error) {
+      console.log("createPost error", error);
+      setError("POST 생성에 실패했습니다.");
+    }
+
+    setLoading(true);
+  };
+
   //vote : 1(좋아요) or -1(싫어요)
   const onVote = async (post: Post, vote: 1 | -1) => {
     if (!user?.uid) {
-      setModal({ open: true, view: "login" });
+      setModalAtom({ open: true, view: "login" });
       return;
     }
 
     try {
       const { totalVote, communityId } = post;
-      const existingPostVote = postItems.postVotes.find(
+      const existingPostVote = postAtom.postVotes.find(
         (postVote) => postVote.postId === post.id
       );
       const updatedPost = { ...post };
-      const updatedPosts = [...postItems.posts];
-      let updatedPostVotes = [...postItems.postVotes];
+      const updatedPosts = [...postAtom.posts];
+      let updatedPostVotes = [...postAtom.postVotes];
       let totalVoteChange: number = vote;
 
       const batch = writeBatch(firestore);
@@ -120,7 +333,7 @@ const usePost = () => {
 
           updatedPost.totalVote = totalVote + 2 * vote;
 
-          const voteIndex = postItems.postVotes.findIndex(
+          const voteIndex = postAtom.postVotes.findIndex(
             (vote) => vote.id === existingPostVote.id
           );
           // Vote was found --> findIndex , if not found --> returns -1
@@ -139,12 +352,10 @@ const usePost = () => {
       }
 
       // 2. UPDATE Post doc
-      const postIndex = postItems.posts.findIndex(
-        (item) => item.id === post.id
-      );
+      const postIndex = postAtom.posts.findIndex((item) => item.id === post.id);
       updatedPosts[postIndex!] = updatedPost;
 
-      setPostItems((prev) => ({
+      setPostAtom((prev) => ({
         ...prev,
         selectedPost: updatedPost,
         posts: updatedPosts,
@@ -161,7 +372,7 @@ const usePost = () => {
   };
 
   const onSelectPost = (post: Post) => {
-    setPostItems((prev) => ({
+    setPostAtom((prev) => ({
       ...prev,
       selectedPost: post,
     }));
@@ -183,7 +394,7 @@ const usePost = () => {
       await deleteDoc(postDocRef);
 
       // update recoil state
-      setPostItems((prev) => ({
+      setPostAtom((prev) => ({
         ...prev,
         posts: prev.posts.filter((item) => item.id !== post.id),
       }));
@@ -196,11 +407,19 @@ const usePost = () => {
   };
 
   return {
-    postItems,
-    setPostItems,
+    getHomeFeed,
+    getUserHomeFeed,
+    getCommunityFeed,
+    createPost,
+    getPostVotes,
+    getPosts,
+    getPost,
     onVote,
     onDeletePost,
     onSelectPost,
+    postAtom,
+    loading,
+    error,
   };
 };
 

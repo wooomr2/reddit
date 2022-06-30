@@ -1,5 +1,5 @@
 ## Deploy 주소
-
+https://reddit-wooomr2.vercel.app
 
 ## Next.js, TypeScript, Firebase, ChakraUI
 
@@ -58,20 +58,6 @@ community = {
 
 
 # Custom-Hook:  useCommunity 3개 컴포넌트에 적용
-
-<Communnity-Header>
-communityState.mySnippets
-joinCommunity
-leaveCommunity
-
-<MyCommunitiesDropdown>
-communityState.mySnippets
-
-<TopCommunities>
-communityState.mySnippets
-joinCommunity
-leaveCommunity
-
 
 # Firebase Transaction / batch
 -Transaction : set of read and write
