@@ -1,35 +1,27 @@
-import {
-  Box,
-  Button,
-  Flex,
-  Icon,
-  Image,
-  Skeleton,
-  SkeletonCircle,
-  Stack,
-  Text
-} from "@chakra-ui/react";
+import { Box, Button, Flex, Icon, Image, Text } from "@chakra-ui/react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { FaReddit } from "react-icons/fa";
 import useCommunity from "../../hooks/useCommunity";
 import { Community } from "../../models/Community";
+import TopCommuLoader from "../UI/Loader/TopCommuLoader";
 
 const TopCommunities: React.FC = () => {
   const [communities, setCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(false);
+  const [limit, setLimit] = useState(5)
   const { communityAtom, getCommunities, onJoinOrLeaveCommunity } =
     useCommunity();
 
   useEffect(() => {
     const getTopCommunities = async () => {
       setLoading(true);
-      await getCommunities(setCommunities, 10);
+      await getCommunities(setCommunities, limit);
       setLoading(false);
     };
 
     getTopCommunities();
-  }, []);
+  }, [limit]);
 
   return (
     <Flex
@@ -39,7 +31,8 @@ const TopCommunities: React.FC = () => {
       cursor="pointer"
       border="1px solid"
       borderColor="gray.300"
-      position="sticky" top="60px"
+      position="sticky"
+      top="60px"
     >
       <Flex
         align="flex-end"
@@ -58,20 +51,7 @@ const TopCommunities: React.FC = () => {
       </Flex>
       <Flex direction="column">
         {loading ? (
-          <Stack mt={2} p={3}>
-            <Flex justify="space-between" align="center">
-              <SkeletonCircle size="10" />
-              <Skeleton height="10px" width="70%" />
-            </Flex>
-            <Flex justify="space-between" align="center">
-              <SkeletonCircle size="10" />
-              <Skeleton height="10px" width="70%" />
-            </Flex>
-            <Flex justify="space-between" align="center">
-              <SkeletonCircle size="10" />
-              <Skeleton height="10px" width="70%" />
-            </Flex>
-          </Stack>
+          <TopCommuLoader />
         ) : (
           <>
             {communities.map((item, index) => {
@@ -137,7 +117,7 @@ const TopCommunities: React.FC = () => {
               );
             })}
             <Box p="10px 20px">
-              <Button height="30px" width="100%">
+              <Button height="30px" width="100%" onClick={()=>setLimit(100)}>
                 View All
               </Button>
             </Box>

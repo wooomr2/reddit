@@ -1,10 +1,12 @@
-import { Button, Flex, Input, Text } from "@chakra-ui/react";
+import { Button, Text } from "@chakra-ui/react";
 import React, { useState } from "react";
 import { useSignInWithEmailAndPassword } from "react-firebase-hooks/auth";
 import { useSetRecoilState } from "recoil";
 import { modalState } from "../../../../atoms/modalAtom";
 import { auth } from "../../../../firebase/clientApp";
 import { FIREBASE_ERRORS } from "../../../../firebase/errors";
+import AuthInput from "../../../UI/Auth/AuthInput";
+import AuthText from "../../../UI/Auth/AuthText";
 
 const Login: React.FC = () => {
   const setModalAtom = useSetRecoilState(modalState);
@@ -30,40 +32,8 @@ const Login: React.FC = () => {
 
   return (
     <form onSubmit={onSubmit}>
-      <Input
-        onChange={onChange}
-        required
-        name="email"
-        type="email"
-        placeholder="email"
-        mb="2"
-        bg="gray.50"
-        _placeholder={{ color: "gray.500" }}
-        _hover={{ bg: "white", border: "1px solid", borderColor: "blue.500" }}
-        _focus={{
-          outline: "nonne",
-          bg: "white",
-          border: "1px solid",
-          borderColor: "blue.500",
-        }}
-      />
-      <Input
-        onChange={onChange}
-        required
-        name="password"
-        type="password"
-        placeholder="password"
-        mb="2"
-        bg="gray.50"
-        _placeholder={{ color: "gray.500" }}
-        _hover={{ bg: "white", border: "1px solid", borderColor: "blue.500" }}
-        _focus={{
-          outline: "nonne",
-          bg: "white",
-          border: "1px solid",
-          borderColor: "blue.500",
-        }}
-      />
+      <AuthInput type="email" onChange={onChange} />
+      <AuthInput type="password" onChange={onChange} />
 
       <Text textAlign="center" color="red" fontSize="10pt">
         {FIREBASE_ERRORS[error?.message as keyof typeof FIREBASE_ERRORS]}
@@ -73,33 +43,18 @@ const Login: React.FC = () => {
         Log In
       </Button>
 
-      <Flex fontSize="10pt" justifyContent="center" mb={2}>
-        <Text mr="1">Forgot your password?</Text>
-        <Text
-          onClick={() =>
-            setModalAtom((prev) => ({ ...prev, view: "resetPassword" }))
-          }
-          color="blue.500"
-          fontWeight="700"
-          cursor="pointer"
-          _hover={{ fontWeight: "900", color: "blue.600" }}
-        >
-          Reset
-        </Text>
-      </Flex>
-
-      <Flex fontSize="10pt" justifyContent="center">
-        <Text mr="1">New Here?</Text>
-        <Text
-          onClick={() => setModalAtom((prev) => ({ ...prev, view: "signup" }))}
-          color="blue.500"
-          fontWeight="700"
-          cursor="pointer"
-          _hover={{ fontWeight: "900", color: "blue.600" }}
-        >
-          SIGN UP
-        </Text>
-      </Flex>
+      <AuthText
+        title="Forgot your password?"
+        link="Reset"
+        onClick={() =>
+          setModalAtom((prev) => ({ ...prev, view: "resetPassword" }))
+        }
+      />
+      <AuthText
+        title="New Here?"
+        link="SIGN UP"
+        onClick={() => setModalAtom((prev) => ({ ...prev, view: "signup" }))}
+      />
     </form>
   );
 };

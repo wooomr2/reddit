@@ -16,7 +16,6 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import { useRouter } from "next/router";
 import React, { useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { BsFillEyeFill, BsFillPersonFill } from "react-icons/bs";
@@ -32,7 +31,6 @@ type Props = {
 };
 
 const CreateCommunityModal: React.FC<Props> = ({ open, handleClose }) => {
-  const router = useRouter();
   const [user] = useAuthState(auth);
   const [communityName, setCommunityName] = useState("");
   const [communityType, setCommunityType] = useState("public");

@@ -1,10 +1,12 @@
-import { Button, Flex, Input, Text } from "@chakra-ui/react";
+import { Button, Text } from "@chakra-ui/react";
 import React, { useState } from "react";
 import { useCreateUserWithEmailAndPassword } from "react-firebase-hooks/auth";
 import { useSetRecoilState } from "recoil";
 import { modalState } from "../../../../atoms/modalAtom";
 import { auth } from "../../../../firebase/clientApp";
 import { FIREBASE_ERRORS } from "../../../../firebase/errors";
+import AuthInput from "../../../UI/Auth/AuthInput";
+import AuthText from "../../../UI/Auth/AuthText";
 
 const Signup: React.FC = () => {
   const setModalAtom = useSetRecoilState(modalState);
@@ -15,14 +17,14 @@ const Signup: React.FC = () => {
   const [signupForm, setSignupForm] = useState({
     email: "",
     password: "",
-    comfirmPassword: "",
+    confirmPassword: "",
   });
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (error) setError("");
-    if (signupForm.password !== signupForm.comfirmPassword) {
+    if (signupForm.password !== signupForm.confirmPassword) {
       setError("비밀번호가 일치하지 않습니다.");
       return;
     }
@@ -39,57 +41,9 @@ const Signup: React.FC = () => {
 
   return (
     <form onSubmit={onSubmit}>
-      <Input
-        onChange={onChange}
-        required
-        name="email"
-        type="email"
-        placeholder="email"
-        mb="2"
-        bg="gray.50"
-        _placeholder={{ color: "gray.500" }}
-        _hover={{ bg: "white", border: "1px solid", borderColor: "blue.500" }}
-        _focus={{
-          outline: "nonne",
-          bg: "white",
-          border: "1px solid",
-          borderColor: "blue.500",
-        }}
-      />
-      <Input
-        onChange={onChange}
-        required
-        name="password"
-        type="password"
-        placeholder="password"
-        mb="2"
-        bg="gray.50"
-        _placeholder={{ color: "gray.500" }}
-        _hover={{ bg: "white", border: "1px solid", borderColor: "blue.500" }}
-        _focus={{
-          outline: "nonne",
-          bg: "white",
-          border: "1px solid",
-          borderColor: "blue.500",
-        }}
-      />
-      <Input
-        onChange={onChange}
-        required
-        name="comfirmPassword"
-        type="comfirmPassword"
-        placeholder="confirm password"
-        mb="2"
-        bg="gray.50"
-        _placeholder={{ color: "gray.500" }}
-        _hover={{ bg: "white", border: "1px solid", borderColor: "blue.500" }}
-        _focus={{
-          outline: "nonne",
-          bg: "white",
-          border: "1px solid",
-          borderColor: "blue.500",
-        }}
-      />
+      <AuthInput type="email" onChange={onChange} />
+      <AuthInput type="password" onChange={onChange} />
+      <AuthInput type="password" name="confirmPassword" onChange={onChange} />
 
       {(error || userError) && (
         <Text textAlign="center" color="red" fontSize="10pt">
@@ -108,18 +62,12 @@ const Signup: React.FC = () => {
       >
         SIGN UP
       </Button>
-      <Flex fontSize="9pt" justifyContent="center">
-        <Text mr="1">Already Redditor?</Text>
-        <Text
-          onClick={() => setModalAtom((prev) => ({ ...prev, view: "login" }))}
-          color="blue.500"
-          fontWeight="700"
-          cursor="pointer"
-          _hover={{ fontWeight: "900", color: "blue.600" }}
-        >
-          LOG IN
-        </Text>
-      </Flex>
+
+      <AuthText
+        title="Already Redditor?"
+        link="LOG IN"
+        onClick={() => setModalAtom((prev) => ({ ...prev, view: "login" }))}
+      />
     </form>
   );
 };

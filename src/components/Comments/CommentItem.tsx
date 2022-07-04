@@ -31,6 +31,7 @@ const CommentItem: React.FC<Props> = ({
       <Box mr="2">
         <Icon as={FaReddit} fontSize="30" color="gray.300" />
       </Box>
+
       <Stack spacing="1">
         <Stack direction="row" align="center" fontSize="8pt">
           <Text>{comment.creatorDisplayName}</Text>
@@ -39,7 +40,9 @@ const CommentItem: React.FC<Props> = ({
           </Text>
           {deleteLoading && <Spinner size="sm" />}
         </Stack>
+
         <Text fontSize="10pt">{comment.text}</Text>
+        
         <Stack direction="row" align="center" cursor="pointer" color="gray.500">
           {userId === comment.creatorId && (
             <>

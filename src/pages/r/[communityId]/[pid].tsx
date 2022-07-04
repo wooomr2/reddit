@@ -16,7 +16,7 @@ import usePost from "../../../hooks/usePost";
 const PostPage: React.FC = () => {
   const { pid } = useRouter().query;
   const [user] = useAuthState(auth);
-  const currentCommunity = useRecoilValue(communityState).currentCommunity;
+  const community = useRecoilValue(communityState).currentCommunity;
   const { getPost } = usePost();
   const selectedPost = useRecoilValue(postState).selectedPost;
 
@@ -27,7 +27,7 @@ const PostPage: React.FC = () => {
     }
   }, [pid, selectedPost]);
 
-  if (!currentCommunity) return <NotFound />;
+  if (!community) return <NotFound />;
   return (
     <ContentLayout>
       {/* Left */}
@@ -43,7 +43,7 @@ const PostPage: React.FC = () => {
       )}
 
       {/* Right */}
-      <AboutCommunity community={currentCommunity} />
+      <AboutCommunity community={community} />
     </ContentLayout>
   );
 };

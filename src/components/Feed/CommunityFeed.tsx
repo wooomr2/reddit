@@ -6,7 +6,7 @@ import { auth } from "../../firebase/clientApp";
 import usePost from "../../hooks/usePost";
 import { Community } from "../../models/Community";
 import PostItem from "../Post/PostItem/PostItem";
-import PostLoader from "../Post/PostLoader";
+import PostLoader from "../../components/UI/Loader/PostLoader";
 
 type Props = {
   community: Community;

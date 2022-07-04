@@ -7,7 +7,7 @@ import {
   Image,
   Spinner,
   Stack,
-  Text,
+  Text
 } from "@chakra-ui/react";
 import moment from "moment";
 import Link from "next/link";
@@ -33,7 +33,6 @@ const AboutCommunity: React.FC<Props> = ({ community }) => {
   const fileRef = useRef<HTMLInputElement>(null);
   const { selectedFile, onSelectFile } = useFile();
   const [imageLoading, setImageLoading] = useState(false);
-  const [error, setError] = useState("");
   const { updateCommunityImage } = useCommunity();
 
   const handleUpdateImage = async () => {
@@ -43,7 +42,6 @@ const AboutCommunity: React.FC<Props> = ({ community }) => {
       await updateCommunityImage(community.id, selectedFile);
     } catch (error: any) {
       console.log("updateImage error", error.message);
-      setError(error.message);
     }
     setImageLoading(false);
   };

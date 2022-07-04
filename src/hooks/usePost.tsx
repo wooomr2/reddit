@@ -140,45 +140,6 @@ const usePost = () => {
     setLoading(false);
   };
 
-  const getPostVotes = async (communtyId: string) => {
-    const postVotesQuery = query(
-      collection(firestore, `users/${user?.uid}/postVotes`),
-      where("communityId", "==", communtyId)
-    );
-    const postVoteDocs = await getDocs(postVotesQuery);
-    const postVotes = postVoteDocs.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    setPostAtom((prev) => ({
-      ...prev,
-      postVotes: postVotes as PostVote[],
-    }));
-  };
-
-  const getPosts = async (communtyId: string) => {
-    setLoading(true);
-    try {
-      const postsQuery = query(
-        collection(firestore, "posts"),
-        where("communityId", "==", communtyId),
-        orderBy("createdAt", "desc")
-      );
-      const postDocs = await getDocs(postsQuery);
-
-      const posts = postDocs.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-
-      setPostAtom((prev) => ({
-        ...prev,
-        posts: posts as Post[],
-      }));
-    } catch (error) {
-      console.log("getPosts error", error);
-    }
-    setLoading(false);
-  };
-
   const getPost = async (pid: string) => {
     try {
       const postDocRef = doc(firestore, "posts", pid);
@@ -190,28 +151,6 @@ const usePost = () => {
       }));
     } catch (error) {
       console.log("getPost error", error);
-    }
-  };
-
-  const getPostVote = async (pid: string) => {
-    try {
-      const postVoteQuery = query(
-        collection(firestore, `users/${user?.uid}/postVotes`),
-        where("postId", "==", pid)
-      );
-      const postVoteDocs = await getDocs(postVoteQuery);
-
-      const postVote = postVoteDocs.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      setPostAtom((prev) => ({
-        ...prev,
-        postVote: postVote as PostVote[],
-      }));
-    } catch (error) {
-      console.log("getPostVote error", error);
     }
   };
 
@@ -410,10 +349,8 @@ const usePost = () => {
     getHomeFeed,
     getUserHomeFeed,
     getCommunityFeed,
-    createPost,
-    getPostVotes,
-    getPosts,
     getPost,
+    createPost,
     onVote,
     onDeletePost,
     onSelectPost,

@@ -1,10 +1,4 @@
-import {
-  Alert,
-  AlertDescription,
-  AlertIcon,
-  AlertTitle,
-  Flex,
-} from "@chakra-ui/react";
+import { Alert, AlertDescription, AlertIcon, AlertTitle, Flex } from "@chakra-ui/react";
 import { User } from "firebase/auth";
 import React, { useRef, useState } from "react";
 import { BiPoll } from "react-icons/bi";

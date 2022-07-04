@@ -2,10 +2,7 @@ import {
   Alert,
   AlertDescription,
   AlertIcon,
-  Flex,
-  Icon,
-  Spinner,
-  Text
+  Flex
 } from "@chakra-ui/react";
 import router from "next/router";
 import React, { useState } from "react";
@@ -16,6 +13,7 @@ import { IoArrowRedoOutline, IoBookmarkOutline } from "react-icons/io5";
 import { auth } from "../../../firebase/clientApp";
 import usePost from "../../../hooks/usePost";
 import { Post } from "../../../models/Post";
+import PostIcon from "../../UI/Icon/PostIcon";
 
 type Props = {
   post: Post;
@@ -54,62 +52,16 @@ const BottomIcons: React.FC<Props> = ({ post, isSinglePost }) => {
       )}
 
       <Flex justify="space-evenly" color="gray.500" fontWeight="600">
-        <Flex
-          align="center"
-          justify="center"
-          width="full"
-          p="8px 10px"
-          borderRadius="4"
-          _hover={{ bg: "gray.200" }}
-          cursor="pointer"
-        >
-          <Icon as={BsChat} mr="2" />
-          <Text fontSize="9pt">{post.numberOfComments}</Text>
-        </Flex>
-        <Flex
-          align="center"
-          justify="center"
-          width="full"
-          p="8px 10px"
-          borderRadius="4"
-          _hover={{ bg: "gray.200" }}
-          cursor="pointer"
-        >
-          <Icon as={IoArrowRedoOutline} mr="2" />
-          <Text fontSize="9pt">Share</Text>
-        </Flex>
-        <Flex
-          align="center"
-          justify="center"
-          width="full"
-          p="8px 10px"
-          borderRadius="4"
-          _hover={{ bg: "gray.200" }}
-          cursor="pointer"
-        >
-          <Icon as={IoBookmarkOutline} mr="2" />
-          <Text fontSize="9pt">Save</Text>
-        </Flex>
+        <PostIcon icon={BsChat} text={post.numberOfComments} />
+        <PostIcon icon={IoArrowRedoOutline} text="Share" />
+        <PostIcon icon={IoBookmarkOutline} text="Save" />
         {isCreator && (
-          <Flex
-            align="center"
-            justify="center"
-            width="full"
-            p="8px 10px"
-            borderRadius="4"
-            _hover={{ bg: "gray.200" }}
-            cursor="pointer"
+          <PostIcon
+            icon={AiOutlineDelete}
+            text="Delete"
             onClick={handleDelete}
-          >
-            {loadingDelete ? (
-              <Spinner size="sm" />
-            ) : (
-              <>
-                <Icon as={AiOutlineDelete} mr="2" />
-                <Text fontSize="9pt">Delete</Text>
-              </>
-            )}
-          </Flex>
+            loading={loadingDelete}
+          />
         )}
       </Flex>
     </>

@@ -1,10 +1,11 @@
-import { Button, Flex, Icon, Input, Text } from "@chakra-ui/react";
+import { Button, Flex, Icon, Text } from "@chakra-ui/react";
 import React, { useState } from "react";
 import { useSendPasswordResetEmail } from "react-firebase-hooks/auth";
 import { BsDot, BsReddit } from "react-icons/bs";
 import { useSetRecoilState } from "recoil";
 import { modalState } from "../../../atoms/modalAtom";
 import { auth } from "../../../firebase/clientApp";
+import AuthInput from "../../UI/Auth/AuthInput";
 
 const ResetPassword: React.FC = () => {
   const setModalAtom = useSetRecoilState(modalState);
@@ -25,6 +26,7 @@ const ResetPassword: React.FC = () => {
       <Text fontWeight={700} mb={2}>
         Reset your password
       </Text>
+
       {success ? (
         <Text mb={4}>Check your email :)</Text>
       ) : (
@@ -33,32 +35,17 @@ const ResetPassword: React.FC = () => {
             Enter the email associated with your account and we will send you a
             reset link
           </Text>
+
           <form onSubmit={onSubmit} style={{ width: "100%" }}>
-            <Input
-              required
-              name="email"
-              placeholder="email"
+            <AuthInput
               type="email"
-              mb="2"
-              onChange={(event) => setEmail(event.target.value)}
-              fontSize="10pt"
-              _placeholder={{ color: "gray.500" }}
-              _hover={{
-                bg: "white",
-                border: "1px solid",
-                borderColor: "blue.500",
-              }}
-              _focus={{
-                outline: "none",
-                bg: "white",
-                border: "1px solid",
-                borderColor: "blue.500",
-              }}
-              bg="gray.50"
+              onChange={(e) => setEmail(e.target.value)}
             />
+
             <Text textAlign="center" fontSize="10pt" color="red">
               {error?.message}
             </Text>
+
             <Button
               width="100%"
               height="36px"
@@ -72,6 +59,7 @@ const ResetPassword: React.FC = () => {
           </form>
         </>
       )}
+
       <Flex
         alignItems="center"
         fontSize="9pt"
@@ -104,4 +92,5 @@ const ResetPassword: React.FC = () => {
     </Flex>
   );
 };
+
 export default ResetPassword;

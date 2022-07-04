@@ -9,7 +9,7 @@ type Props = {
 };
 
 const CommunityBanner: React.FC<Props> = ({ community }) => {
-  const { communityAtom, onJoinOrLeaveCommunity, error, loading } =
+  const { communityAtom, onJoinOrLeaveCommunity, loading } =
     useCommunity();
   const currentSnippet = communityAtom.communitySnippets.find(
     (snippet) => snippet.communityId === community.id
@@ -54,6 +54,7 @@ const CommunityBanner: React.FC<Props> = ({ community }) => {
                 r/{community?.id}
               </Text>
             </Flex>
+
             {isModerator ? (
               "Moderator"
             ) : (

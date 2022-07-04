@@ -9,22 +9,22 @@ import CreatePostLink from "../../../components/Post/CreatePostLink";
 import AboutCommunity from "../../../components/Widget/AboutCommunity";
 
 const CommunityPage: React.FC = () => {
-  const currentCommunity = useRecoilValue(communityState).currentCommunity;
+  const community = useRecoilValue(communityState).currentCommunity;
 
-  if (!currentCommunity) return <NotFound />;
+  if (!community) return <NotFound />;
   return (
     <>
-      <CommunityBanner community={currentCommunity} />
+      <CommunityBanner community={community} />
 
       <ContentLayout>
         {/* Left */}
         <>
           <CreatePostLink />
-          <CommunityFeed community={currentCommunity} />
+          <CommunityFeed community={community} />
         </>
 
         {/* Right */}
-        <AboutCommunity community={currentCommunity} />
+        <AboutCommunity community={community} />
       </ContentLayout>
     </>
   );

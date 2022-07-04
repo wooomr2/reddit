@@ -10,13 +10,13 @@ import { auth } from "../../../firebase/clientApp";
 
 const Submit: React.FC = () => {
   const [user] = useAuthState(auth);
-  const currentCommunity = useRecoilValue(communityState).currentCommunity;
+  const community = useRecoilValue(communityState).currentCommunity;
 
-  if (!currentCommunity || !user) return <NotFound />;
+  if (!community || !user) return <NotFound />;
   return (
     <ContentLayout>
       {/* Left */}
-      <PostForm user={user} communityImageURL={currentCommunity?.imageURL} />
+      <PostForm user={user} communityImageURL={community?.imageURL} />
 
       {/* Right */}
       <Premium />

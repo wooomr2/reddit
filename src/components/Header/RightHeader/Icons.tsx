@@ -1,13 +1,13 @@
-import { Box, Flex, Icon } from "@chakra-ui/react";
+import { Box, Flex } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import React from "react";
 import { BsArrowLeftCircle, BsChatDots } from "react-icons/bs";
-import { GrAdd } from "react-icons/gr";
 import {
   IoFilterCircleOutline,
   IoNotificationsOutline,
-  IoVideocamOutline,
+  IoVideocamOutline
 } from "react-icons/io5";
+import HeaderIcon from "../../UI/Icon/HeaderIcon";
 
 const Icons: React.FC = () => {
   const router = useRouter();
@@ -20,74 +20,14 @@ const Icons: React.FC = () => {
         borderRight="1px solid"
         borderColor="gray.200"
       >
-        <Flex
-          onClick={() => router.back()}
-          mr="1.5"
-          ml="1.5"
-          padding="1"
-          cursor="pointer"
-          borderRadius="4"
-          _hover={{ bg: "gray.200" }}
-        >
-          <Icon as={BsArrowLeftCircle} fontSize={20} />
-        </Flex>
-
-        <Flex
-          mr="1.5"
-          ml="1.5"
-          padding="1"
-          cursor="pointer"
-          borderRadius="4"
-          _hover={{ bg: "gray.200" }}
-        >
-          <Icon as={IoFilterCircleOutline} fontSize={22} />
-        </Flex>
-
-        <Flex
-          onClick={() => router.push(`https://netflix-wooomr2.vercel.app`)}
-          mr="1.5"
-          ml="1.5"
-          padding="1"
-          cursor="pointer"
-          borderRadius="4"
-          _hover={{ bg: "gray.200" }}
-        >
-          <Icon as={IoVideocamOutline} fontSize={22} />
-        </Flex>
+        <HeaderIcon icon={BsArrowLeftCircle} onClick={() => router.back()} />
+        <HeaderIcon icon={IoFilterCircleOutline} size={22} />
+        <HeaderIcon icon={IoVideocamOutline} size={22} onClick={() => router.push(`https://netflix-wooomr2.vercel.app`)} />
       </Box>
 
       <>
-        <Flex
-          mr="1.5"
-          ml="1.5"
-          padding="1"
-          cursor="pointer"
-          borderRadius="4"
-          _hover={{ bg: "gray.200" }}
-        >
-          <Icon as={BsChatDots} fontSize={20} />
-        </Flex>
-        <Flex
-          mr="1.5"
-          ml="1.5"
-          padding="1"
-          cursor="pointer"
-          borderRadius="4"
-          _hover={{ bg: "gray.200" }}
-        >
-          <Icon as={IoNotificationsOutline} fontSize={20} />
-        </Flex>
-        <Flex
-          display={{ base: "none", md: "flex" }}
-          mr="3"
-          ml="1.5"
-          padding="1"
-          cursor="pointer"
-          borderRadius="4"
-          _hover={{ bg: "gray.200" }}
-        >
-          <Icon as={GrAdd} fontSize={20} />
-        </Flex>
+        <HeaderIcon icon={BsChatDots} />
+        <HeaderIcon icon={IoNotificationsOutline} />
       </>
     </Flex>
   );

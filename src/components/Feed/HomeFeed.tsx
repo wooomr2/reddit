@@ -4,7 +4,7 @@ import { useRecoilValue } from "recoil";
 import { communityState } from "../../atoms/communityAtom";
 import usePost from "../../hooks/usePost";
 import PostItem from "../Post/PostItem/PostItem";
-import PostLoader from "../Post/PostLoader";
+import PostLoader from "../../components/UI/Loader/PostLoader";
 
 const HomeFeed: React.FC = () => {
   const { getUserHomeFeed, getHomeFeed, postAtom, loading } = usePost();
