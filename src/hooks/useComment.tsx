@@ -1,37 +1,37 @@
-import { firestore } from "../firebase/clientApp";
+import { User } from "firebase/auth";
 import {
-  query,
   collection,
-  where,
-  orderBy,
-  getDocs,
   doc,
+  getDocs,
   increment,
+  orderBy,
+  query,
   serverTimestamp,
   Timestamp,
-  writeBatch,
+  updateDoc,
+  where,
+  writeBatch
 } from "firebase/firestore";
+import { useState } from "react";
+import { useSetRecoilState } from "recoil";
+import { postState } from "../atoms/postAtom";
+import { firestore } from "../firebase/clientApp";
 import { Comment } from "../models/Comment";
 import { Post } from "../models/Post";
-import { User } from "firebase/auth";
-import { postState } from "../atoms/postAtom";
-import { useSetRecoilState } from "recoil";
 
 const useComment = () => {
-  const setPostAtom = useSetRecoilState(postState);
+  const setPost = useSetRecoilState(postState);
+  const [comments, setComments] = useState<Comment[]>([]);
 
-  const getComments = async (
-    selectedPostId: string,
-    setComments: React.Dispatch<React.SetStateAction<Comment[]>>
-  ) => {
+  const getComments = async (postId: string) => {
     try {
-      const commentsQuery = query(
+      const q = query(
         collection(firestore, "comments"),
-        where("postId", "==", selectedPostId),
+        where("postId", "==", postId),
         orderBy("createdAt", "desc")
       );
 
-      const commentDocs = await getDocs(commentsQuery);
+      const commentDocs = await getDocs(q);
 
       const comments = commentDocs.docs.map((doc) => ({
         id: doc.id,
@@ -47,10 +47,8 @@ const useComment = () => {
   const createComment = async (
     user: User,
     communityId: string,
-    selectedPost: Post,
-    commentText: string,
-    setCommentText: React.Dispatch<React.SetStateAction<string>>,
-    setComments: React.Dispatch<React.SetStateAction<Comment[]>>
+    post: Post,
+    commentText: string
   ) => {
     try {
       const batch = writeBatch(firestore);
@@ -63,8 +61,8 @@ const useComment = () => {
         creatorId: user.uid,
         creatorDisplayName: user.email!.split("@")[0],
         communityId,
-        postId: selectedPost?.id!,
-        postTitle: selectedPost?.title!,
+        postId: post?.id!,
+        postTitle: post?.title!,
         text: commentText,
         createdAt: serverTimestamp() as Timestamp,
       };
@@ -73,35 +71,24 @@ const useComment = () => {
       batch.set(commentDocRef, newComment);
 
       // update post.numberOfComments +1
-      const postDocRef = doc(firestore, "posts", selectedPost?.id!);
+      const postDocRef = doc(firestore, "posts", post?.id!);
       batch.update(postDocRef, {
         numberOfComments: increment(1),
       });
 
       await batch.commit();
 
-      // update recoil state --> 전역관리할필요있나?
-      setCommentText("");
       setComments((prev) => [newComment, ...prev]);
-      setPostAtom((prev) => ({
-        ...prev,
-        selectedPost: {
-          ...prev.selectedPost,
-          numberOfComments: prev.selectedPost?.numberOfComments! + 1,
-        } as Post,
-      }));
+      setPost(
+        (prev) =>
+          ({ ...prev, numberOfcomments: prev?.numberOfComments! + 1 } as Post)
+      );
     } catch (error) {
       console.log("onCreateComment error", error);
     }
   };
 
-  const deleteComment = async (
-    comment: Comment,
-    setComments: React.Dispatch<React.SetStateAction<Comment[]>>,
-    setDelId: React.Dispatch<React.SetStateAction<string>>
-  ) => {
-    setDelId(comment.id);
-
+  const deleteComment = async (comment: Comment) => {
     try {
       const batch = writeBatch(firestore);
 
@@ -118,22 +105,39 @@ const useComment = () => {
       await batch.commit();
 
       // update recoil state
-      setPostAtom((prev) => ({
-        ...prev,
-        selectedPost: {
-          ...prev.selectedPost,
-          numberOfComments: prev.selectedPost?.numberOfComments! - 1,
-        } as Post,
-      }));
+      setPost(
+        (prev) =>
+          ({ ...prev, numberOfcomments: prev?.numberOfComments! + -1 } as Post)
+      );
       setComments((prev) => prev.filter((item) => item.id !== comment.id));
     } catch (error) {
       console.log("onDeleteComment", error);
     }
-    
-    setDelId("");
   };
 
-  return { getComments, createComment, deleteComment };
+  const updateComment = async (commentId: string, text: string) => {
+    try {
+      await updateDoc(doc(firestore, "comments", commentId), {
+        text,
+      });
+
+      setComments((prev) =>
+        prev.map((item) =>
+          item.id === commentId ? ({ ...item, text } as Comment) : item
+        )
+      );
+    } catch (error) {
+      console.log("updateComment error", error);
+    }
+  };
+
+  return {
+    comments,
+    getComments,
+    createComment,
+    deleteComment,
+    updateComment,
+  };
 };
 
 export default useComment;

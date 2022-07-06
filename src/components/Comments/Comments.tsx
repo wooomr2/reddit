@@ -1,27 +1,24 @@
 import { Box, Flex, Stack, Text } from "@chakra-ui/react";
 import { User } from "firebase/auth";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import useComment from "../../hooks/useComment";
-import { Comment } from "../../models/Comment";
 import { Post } from "../../models/Post";
 import CommentInput from "./CommentInput";
 import CommentItem from "./CommentItem";
 
 type Props = {
   user: User;
-  selectedPost: Post;
+  post: Post;
   communityId: string;
 };
 
-const Comments: React.FC<Props> = ({ user, selectedPost, communityId }) => {
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [delId, setDelId] = useState("");
-  const { getComments } = useComment();
+const Comments: React.FC<Props> = ({ user, post, communityId }) => {
+  const { comments, getComments } = useComment();
 
   useEffect(() => {
-    if (!selectedPost) return;
-    getComments(selectedPost.id, setComments);
-  }, [selectedPost]);
+    if (!post) return;
+    getComments(post.id);
+  }, [post]);
 
   return (
     <Box bg="white" borderRadius="0 0 4px 4px">
@@ -33,13 +30,9 @@ const Comments: React.FC<Props> = ({ user, selectedPost, communityId }) => {
         width="100%"
         fontSize="10pt"
       >
-        <CommentInput
-          user={user}
-          selectedPost={selectedPost}
-          communityId={communityId}
-          setComments={setComments}
-        />
+        <CommentInput user={user} post={post} communityId={communityId} />
       </Flex>
+      
       <Stack p="2" spacing="6">
         {comments.length === 0 ? (
           <Flex
@@ -57,14 +50,7 @@ const Comments: React.FC<Props> = ({ user, selectedPost, communityId }) => {
         ) : (
           <>
             {comments.map((comment, i) => (
-              <CommentItem
-                key={i}
-                comment={comment}
-                deleteLoading={delId === comment.id}
-                userId={user?.uid}
-                setComments={setComments}
-                setDelId={setDelId}
-              />
+              <CommentItem key={i} comment={comment} userId={user?.uid} />
             ))}
           </>
         )}

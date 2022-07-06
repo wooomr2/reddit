@@ -1,5 +1,5 @@
 import { Box, Button, Flex, Icon, Image, Text } from "@chakra-ui/react";
-import React from "react";
+import React, { useMemo } from "react";
 import { FaReddit } from "react-icons/fa";
 import useCommunity from "../../hooks/useCommunity";
 import { Community } from "../../models/Community";
@@ -9,10 +9,12 @@ type Props = {
 };
 
 const CommunityBanner: React.FC<Props> = ({ community }) => {
-  const { communityAtom, onJoinOrLeaveCommunity, loading } =
-    useCommunity();
-  const currentSnippet = communityAtom.communitySnippets.find(
-    (snippet) => snippet.communityId === community.id
+  const { joinOrLeaveCommunity, communitySnippets, loading } = useCommunity();
+
+  const currentSnippet = useMemo(
+    () =>
+      communitySnippets.find((snippet) => snippet.communityId === community.id),
+    [communitySnippets, community.id]
   );
 
   const isModerator = !!currentSnippet?.isModerator;
@@ -23,9 +25,9 @@ const CommunityBanner: React.FC<Props> = ({ community }) => {
       <Box height="50%" bg="blue.400" />
       <Flex justify="center" bg="white" flexGrow="1">
         <Flex width="95%" maxWidth="1024px">
-          {communityAtom?.currentCommunity?.imageURL ? (
+          {community?.imageURL ? (
             <Image
-              src={communityAtom.currentCommunity.imageURL}
+              src={community.imageURL}
               alt=""
               position="relative"
               top={-3}
@@ -64,9 +66,7 @@ const CommunityBanner: React.FC<Props> = ({ community }) => {
                 pr="6"
                 pl="6"
                 isLoading={loading}
-                onClick={() => {
-                  onJoinOrLeaveCommunity(community, isJoined);
-                }}
+                onClick={() => joinOrLeaveCommunity(community, isJoined)}
               >
                 {isJoined ? "Joined" : "Join"}
               </Button>

@@ -2,25 +2,18 @@ import { Box, Button, Flex, Icon, Image, Text } from "@chakra-ui/react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { FaReddit } from "react-icons/fa";
-import useCommunity from "../../hooks/useCommunity";
-import { Community } from "../../models/Community";
-import TopCommuLoader from "../UI/Loader/TopCommuLoader";
+import useCommunity from "../../../hooks/useCommunity";
+import { Community } from "../../../models/Community";
+import TopCommuLoader from "../../UI/Loader/TopCommuLoader";
 
 const TopCommunities: React.FC = () => {
   const [communities, setCommunities] = useState<Community[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [limit, setLimit] = useState(5)
-  const { communityAtom, getCommunities, onJoinOrLeaveCommunity } =
+  const [limit, setLimit] = useState(5);
+  const { getCommunities, joinOrLeaveCommunity, communitySnippets, loading } =
     useCommunity();
 
   useEffect(() => {
-    const getTopCommunities = async () => {
-      setLoading(true);
-      await getCommunities(setCommunities, limit);
-      setLoading(false);
-    };
-
-    getTopCommunities();
+    getCommunities(setCommunities, limit);
   }, [limit]);
 
   return (
@@ -55,7 +48,7 @@ const TopCommunities: React.FC = () => {
         ) : (
           <>
             {communities.map((item, index) => {
-              const isJoined = !!communityAtom.communitySnippets.find(
+              const isJoined = !!communitySnippets.find(
                 (snippet) => snippet.communityId === item.id
               );
               return (
@@ -105,7 +98,7 @@ const TopCommunities: React.FC = () => {
                         fontSize="8pt"
                         onClick={(event) => {
                           event.stopPropagation();
-                          onJoinOrLeaveCommunity(item, isJoined);
+                          joinOrLeaveCommunity(item, isJoined);
                         }}
                         variant={isJoined ? "outline" : "solid"}
                       >
@@ -117,9 +110,19 @@ const TopCommunities: React.FC = () => {
               );
             })}
             <Box p="10px 20px">
-              <Button height="30px" width="100%" onClick={()=>setLimit(100)}>
-                View All
-              </Button>
+              {limit === 5 ? (
+                <Button
+                  height="30px"
+                  width="100%"
+                  onClick={() => setLimit(100)}
+                >
+                  View More
+                </Button>
+              ) : (
+                <Button height="30px" width="100%" onClick={() => setLimit(5)}>
+                  Shorten
+                </Button>
+              )}
             </Box>
           </>
         )}

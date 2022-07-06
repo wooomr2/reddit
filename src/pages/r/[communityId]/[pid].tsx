@@ -9,41 +9,44 @@ import Comments from "../../../components/Comments/Comments";
 import NotFound from "../../../components/Community/NotFound";
 import ContentLayout from "../../../components/Layout/ContentLayout";
 import PostItem from "../../../components/Post/PostItem/PostItem";
-import AboutCommunity from "../../../components/Widget/AboutCommunity";
+import AboutCommunity from "../../../components/Widget/SideWidget/AboutCommunity";
+import BackToTop from "../../../components/Widget/SideWidget/BackToTop";
 import { auth } from "../../../firebase/clientApp";
 import usePost from "../../../hooks/usePost";
 
 const PostPage: React.FC = () => {
-  const { pid } = useRouter().query;
+  const { pid, onlyComment } = useRouter().query;
   const [user] = useAuthState(auth);
-  const community = useRecoilValue(communityState).currentCommunity;
-  const { getPost } = usePost();
-  const selectedPost = useRecoilValue(postState).selectedPost;
+  const community = useRecoilValue(communityState);
+  const { getPost, loading } = usePost();
+  const post = useRecoilValue(postState);
 
   //새로고침 시 다시 getPost
   useEffect(() => {
-    if (pid && !selectedPost) {
+    if (pid && !post) {
       getPost(pid as string);
     }
-  }, [pid, selectedPost]);
+  }, [pid, post]);
 
-  if (!community) return <NotFound />;
+  if (loading) return <div>Loading....</div>
+  if (!community || !post) return <NotFound />;
   return (
     <ContentLayout>
       {/* Left */}
-      {selectedPost && (
-        <>
-          <PostItem post={selectedPost} isSinglePost={true} />
-          <Comments
-            user={user as User}
-            selectedPost={selectedPost}
-            communityId={selectedPost?.communityId as string}
-          />
-        </>
-      )}
+      <>
+        {!onlyComment && <PostItem post={post} isSinglePost={true} />}
+        <Comments
+          user={user as User}
+          post={post}
+          communityId={post?.communityId as string}
+        />
+      </>
 
       {/* Right */}
+      <>
       <AboutCommunity community={community} />
+      <BackToTop />
+      </>
     </ContentLayout>
   );
 };

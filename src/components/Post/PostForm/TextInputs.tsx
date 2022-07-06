@@ -6,7 +6,6 @@ type Props = {
     title: string;
     body: string;
   };
-  // loading: boolean;
   onChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => void;
@@ -39,7 +38,7 @@ const TextInputs: React.FC<Props> = ({
         borderRadius="4"
         placeholder="Text"
       />
-      <Flex justify="flex-end"> 
+      <Flex justify="flex-end">
         <Button
           height="34px"
           padding="0 30px"

@@ -10,7 +10,7 @@ const SearchInput: React.FC = () => {
           <SearchIcon color="gray.300" mb="1" />
         </InputLeftElement>
         <Input
-          placeholder="Search Reddit"
+          placeholder={"Search"}
           fontSize="10pt"
           height="34px"
           bg="gray.50"

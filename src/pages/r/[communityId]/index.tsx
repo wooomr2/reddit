@@ -5,11 +5,12 @@ import CommunityBanner from "../../../components/Community/CommunityBanner";
 import NotFound from "../../../components/Community/NotFound";
 import CommunityFeed from "../../../components/Feed/CommunityFeed";
 import ContentLayout from "../../../components/Layout/ContentLayout";
-import CreatePostLink from "../../../components/Post/CreatePostLink";
-import AboutCommunity from "../../../components/Widget/AboutCommunity";
+import CreatePostWidget from "../../../components/Widget/TopWidget/CreatePostWidget";
+import BackToTop from "../../../components/Widget/SideWidget/BackToTop";
+import AboutCommunity from "../../../components/Widget/SideWidget/AboutCommunity";
 
 const CommunityPage: React.FC = () => {
-  const community = useRecoilValue(communityState).currentCommunity;
+  const community = useRecoilValue(communityState);
 
   if (!community) return <NotFound />;
   return (
@@ -19,12 +20,15 @@ const CommunityPage: React.FC = () => {
       <ContentLayout>
         {/* Left */}
         <>
-          <CreatePostLink />
+          <CreatePostWidget />
           <CommunityFeed community={community} />
         </>
 
         {/* Right */}
-        <AboutCommunity community={community} />
+        <>
+          <AboutCommunity community={community} />
+          <BackToTop />
+        </>
       </ContentLayout>
     </>
   );

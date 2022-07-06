@@ -8,6 +8,14 @@ https://reddit-wooomr2.vercel.app
  
 * 상태관리 Recoil, contextAPI
 
+# firebase 단점 : Cloud Firestore는 기본 색인 생성 또는 문서의 텍스트 필드 검색을 지원하지 않습니다.
+-->Elastic
+Algolia
+Typesense...
+연동해야함
+
+# 백엔드 코드 없이 firebase cloud 에서 처리가능 front 중심의 개발에 유리할듯
+# 모바일 앱이나 개인 프로젝트 간단하게 build해보기 좋은 듯
 
 ## SQL
 

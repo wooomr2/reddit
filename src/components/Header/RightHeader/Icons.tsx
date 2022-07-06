@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import React from "react";
 import { BsArrowLeftCircle, BsChatDots } from "react-icons/bs";
 import {
-  IoFilterCircleOutline,
+  IoBookmarksOutline,
   IoNotificationsOutline,
   IoVideocamOutline
 } from "react-icons/io5";
@@ -21,8 +21,16 @@ const Icons: React.FC = () => {
         borderColor="gray.200"
       >
         <HeaderIcon icon={BsArrowLeftCircle} onClick={() => router.back()} />
-        <HeaderIcon icon={IoFilterCircleOutline} size={22} />
-        <HeaderIcon icon={IoVideocamOutline} size={22} onClick={() => router.push(`https://netflix-wooomr2.vercel.app`)} />
+        <HeaderIcon
+          icon={IoBookmarksOutline}
+          size={18}
+          onClick={() => router.push(`/bookmark`)}
+        />
+        <HeaderIcon
+          icon={IoVideocamOutline}
+          size={22}
+          onClick={() => router.push(`https://netflix-wooomr2.vercel.app`)}
+        />
       </Box>
 
       <>

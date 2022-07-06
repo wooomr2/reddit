@@ -17,10 +17,10 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { FaReddit } from "react-icons/fa";
 import { HiOutlineDotsHorizontal } from "react-icons/hi";
 import { RiCakeLine } from "react-icons/ri";
-import { auth } from "../../firebase/clientApp";
-import useCommunity from "../../hooks/useCommunity";
-import useFile from "../../hooks/useFile";
-import { Community } from "../../models/Community";
+import { auth } from "../../../firebase/clientApp";
+import useCommunity from "../../../hooks/useCommunity";
+import useFile from "../../../hooks/useFile";
+import { Community } from "../../../models/Community";
 
 type Props = {
   community: Community;

@@ -23,7 +23,7 @@ const Header: React.FC = () => {
       
     >
       <Flex align="center" cursor="pointer" onClick={() => router.push(`/`)}>
-        <Image src="/images/redditFace.svg" alt="" height="30px" />
+        <Image src="/images/redditFace.svg" alt="" height="30px" minHeight="22px" minWidth="22px" />
         <Image
           src="/images/redditText.svg"
           alt=""

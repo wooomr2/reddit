@@ -3,13 +3,13 @@ import React, { useState } from "react";
 import { FaReddit } from "react-icons/fa";
 import { GrAdd } from "react-icons/gr";
 import { useRecoilValue } from "recoil";
-import { communityState } from "../../../../atoms/communityAtom";
+import { communitySnippetsState } from "../../../../atoms/communityAtom";
 import CreateCommunityModal from "../../../Modal/CreateCommunityModal/CreateCommunityModal";
 import CommunityMenuItem from "./CommunityMenuItem";
 
 const MyCommunityList: React.FC = () => {
   const [open, setOpen] = useState(false);
-  const communitySnippets = useRecoilValue(communityState).communitySnippets;
+  const communitySnippets = useRecoilValue(communitySnippetsState);
 
   return (
     <>

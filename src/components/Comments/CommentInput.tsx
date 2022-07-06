@@ -2,42 +2,29 @@ import { Button, Flex, Text, Textarea } from "@chakra-ui/react";
 import { User } from "firebase/auth";
 import React, { useState } from "react";
 import useComment from "../../hooks/useComment";
-import { Comment } from "../../models/Comment";
 import { Post } from "../../models/Post";
 import AuthButtons from "../Header/RightHeader/AuthButtons";
 
 type Props = {
   user: User;
-  selectedPost: Post;
+  post: Post;
   communityId: string;
-  setComments: React.Dispatch<React.SetStateAction<Comment[]>>;
 };
 
-const CommentInput: React.FC<Props> = ({
-  user,
-  selectedPost,
-  communityId,
-  setComments,
-}) => {
-  const [commentText, setCommentText] = useState("");
+const CommentInput: React.FC<Props> = ({ user, post, communityId }) => {
+  const [text, setText] = useState("");
   const [createLoading, setCreateLoading] = useState(false);
   const { createComment } = useComment();
 
   const onCreateComment = async () => {
     setCreateLoading(true);
-    await createComment(
-      user,
-      communityId,
-      selectedPost,
-      commentText,
-      setCommentText,
-      setComments,
-    );
+    await createComment(user, communityId, post, text);
+    setText("");
     setCreateLoading(false);
   };
 
   return (
-    <Flex direction="column" position="relative">
+    <Flex direction="column" position="relative" mt={3}>
       {user ? (
         <>
           <Text mb={1}>
@@ -47,8 +34,8 @@ const CommentInput: React.FC<Props> = ({
             </span>
           </Text>
           <Textarea
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
             placeholder="What are your thoughts?"
             fontSize="10pt"
             borderRadius={4}
@@ -74,7 +61,7 @@ const CommentInput: React.FC<Props> = ({
           >
             <Button
               height="26px"
-              disabled={!commentText.length}
+              disabled={!text.length}
               isLoading={createLoading}
               onClick={onCreateComment}
             >

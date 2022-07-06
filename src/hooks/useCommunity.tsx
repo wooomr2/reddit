@@ -17,7 +17,11 @@ import router from "next/router";
 import { useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useRecoilState, useSetRecoilState } from "recoil";
-import { communityState } from "../atoms/communityAtom";
+import {
+  communitySnippetsState,
+  communityState,
+  isSnippetFetchedState,
+} from "../atoms/communityAtom";
 import { modalState } from "../atoms/modalAtom";
 import { auth, firestore, storage } from "../firebase/clientApp";
 import { Community } from "../models/Community";
@@ -26,40 +30,43 @@ import { CommunitySnippet } from "../models/User/CommunitySnippet";
 const useCommunity = () => {
   const [user] = useAuthState(auth);
   const setModalAtom = useSetRecoilState(modalState);
-  const [communityAtom, setCommunityAtom] = useRecoilState(communityState);
+  const [community, setCommunity]= useRecoilState(communityState);
+  const [communitySnippets, setCommunitySnippets] = useRecoilState(communitySnippetsState);
+  const [isSnippetFetched, setIsSnippetFetched] = useRecoilState(isSnippetFetchedState);
+  const [loadingSnippets, setLoadingSnippets] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const [error, setError] = useState("");
 
   const getCommunitySnippets = async () => {
-    setLoading(true);
+    setLoadingSnippets(true);
     try {
       const snippetDocs = await getDocs(
         collection(firestore, `users/${user?.uid}/communitySnippets`)
       );
       const snippets = snippetDocs.docs.map((doc) => ({ ...doc.data() }));
-      setCommunityAtom((prev) => ({
-        ...prev,
-        communitySnippets: snippets as CommunitySnippet[],
-        isSnippetsFetched: true,
-      }));
+      setCommunitySnippets(snippets);
+      setIsSnippetFetched(true);
+
     } catch (error: any) {
       console.log("getCommunitySnippets error", error);
       setError(error.message);
     }
-    setLoading(false);
+    setLoadingSnippets(false);
   };
 
   const getCommunities = async (
     setCommunities: React.Dispatch<React.SetStateAction<Community[]>>,
     lim: number
   ) => {
+    setLoading(true)
     try {
-      const communityQuery = query(
+      const q = query(
         collection(firestore, "communities"),
         orderBy("numberOfMembers", "desc"),
         limit(lim)
       );
-      const communityDocs = await getDocs(communityQuery);
+      const communityDocs = await getDocs(q);
       const communities = communityDocs.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -69,6 +76,7 @@ const useCommunity = () => {
     } catch (error) {
       console.log("getCommunityRecommendation error", error);
     }
+    setLoading(false)
   };
 
   const getCommunity = async (communityId: string) => {
@@ -76,13 +84,11 @@ const useCommunity = () => {
       const communityDocRef = doc(firestore, "communities", communityId);
       const communityDoc = await getDoc(communityDocRef);
 
-      setCommunityAtom((prev) => ({
-        ...prev,
-        currentCommunity: {
-          id: communityDoc.id,
-          ...communityDoc.data(),
-        } as Community,
-      }));
+      setCommunity({
+        id: communityDoc.id,
+        ...communityDoc.data(),
+      } as Community);
+
     } catch (error) {
       console.log("getCommunity error", error);
     }
@@ -119,12 +125,8 @@ const useCommunity = () => {
           newSnippet
         );
       });
-      
 
-      setCommunityAtom((prev) => ({
-        ...prev,
-        communitySnippets: [...prev.communitySnippets, newSnippet],
-      }));
+      setCommunitySnippets((prev) => [...prev, newSnippet]);
 
       router.push(`r/${communityName}`);
 
@@ -157,24 +159,21 @@ const useCommunity = () => {
         }
       );
 
-      setCommunityAtom((prev) => ({
-        ...prev,
-        communitySnippets: [...prev.communitySnippets].map((snippets) =>
-          snippets.communityId === communityId
-            ? { ...snippets, imageURL: downloadURL }
-            : snippets
-        ),
-        currentCommunity: {
-          ...prev.currentCommunity,
-          imageURL: downloadURL,
-        } as Community,
-      }));
+      setCommunitySnippets((prev) =>
+        prev.map((snippet) =>
+          snippet.communityId === communityId
+            ? { ...snippet, imageURL: downloadURL }
+            : snippet
+        )
+      );
+      setCommunity((prev) => ({ ...prev, imageURL: downloadURL } as Community));
+
     } catch (error: any) {
       console.log("updateImage error", error.message);
     }
   };
 
-  const onJoinOrLeaveCommunity = (community: Community, isJoined: boolean) => {
+  const joinOrLeaveCommunity = (community: Community, isJoined: boolean) => {
     if (!user) {
       setModalAtom({ open: true, view: "login" });
       return;
@@ -195,7 +194,6 @@ const useCommunity = () => {
       const newSnippet: CommunitySnippet = {
         communityId: community.id,
         imageURL: community.imageURL || "",
-        // isModerator: user?.uid === community.creatorId,
       };
 
       // 유저 creating a new communitySnippet
@@ -212,10 +210,8 @@ const useCommunity = () => {
       await batch.commit();
 
       // update recoilState
-      setCommunityAtom((prev) => ({
-        ...prev,
-        communitySnippets: [...prev.communitySnippets, newSnippet],
-      }));
+      setCommunitySnippets((prev) => [...prev, newSnippet]);
+
     } catch (error: any) {
       console.log("joinCommunity error", error);
       setError(error.message);
@@ -243,12 +239,10 @@ const useCommunity = () => {
       await batch.commit();
 
       // update recoilState
-      setCommunityAtom((prev) => ({
-        ...prev,
-        communitySnippets: prev.communitySnippets.filter(
-          (snippet) => snippet.communityId !== communityId
-        ),
-      }));
+      setCommunitySnippets((prev) =>
+        prev.filter((snippet) => snippet.communityId !== communityId)
+      );
+
     } catch (error: any) {
       console.log("leaveCommunity error", error);
       setError(error.message);
@@ -263,8 +257,11 @@ const useCommunity = () => {
     getCommunity,
     createCommunity,
     updateCommunityImage,
-    onJoinOrLeaveCommunity,
-    communityAtom,
+    joinOrLeaveCommunity,
+    community,
+    communitySnippets,
+    isSnippetFetched,
+    loadingSnippets,
     loading,
     error,
   };

@@ -6,8 +6,8 @@ import { BsLink45Deg } from "react-icons/bs";
 import { FaReddit } from "react-icons/fa";
 import { IoImageOutline } from "react-icons/io5";
 import { useSetRecoilState } from "recoil";
-import { modalState } from "../../atoms/modalAtom";
-import { auth } from "../../firebase/clientApp";
+import { modalState } from "../../../atoms/modalAtom";
+import { auth } from "../../../firebase/clientApp";
 
 const CreatePostLink: React.FC = () => {
   const router = useRouter();

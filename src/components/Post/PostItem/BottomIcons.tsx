@@ -1,11 +1,6 @@
-import {
-  Alert,
-  AlertDescription,
-  AlertIcon,
-  Flex
-} from "@chakra-ui/react";
+import { Alert, AlertDescription, AlertIcon, Flex } from "@chakra-ui/react";
 import router from "next/router";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { AiOutlineDelete } from "react-icons/ai";
 import { BsChat } from "react-icons/bs";
@@ -22,15 +17,20 @@ type Props = {
 
 const BottomIcons: React.FC<Props> = ({ post, isSinglePost }) => {
   const [user] = useAuthState(auth);
-  const isCreator = user?.uid === post.creatorId;
-  const [loadingDelete, setLoadingDelete] = useState(false);
+  const [delLoading, setDelLoading] = useState(false);
   const [error, setError] = useState("");
-  const { onDeletePost } = usePost();
+  const { deletePost, selectPost, savePostIds, savedPostIds } = usePost();
+
+  const isCreator = user?.uid === post.creatorId;
+  const isSaved = useMemo(
+    () => savedPostIds?.includes(post.id),
+    [post, savedPostIds]
+  );
 
   const handleDelete = async () => {
-    setLoadingDelete(true);
+    setDelLoading(true);
     try {
-      const success = await onDeletePost(post);
+      const success = await deletePost(post);
       if (!success) throw new Error("POST 삭제 실패");
 
       if (isSinglePost) router.push(`/r/${post.communityId}`);
@@ -38,7 +38,7 @@ const BottomIcons: React.FC<Props> = ({ post, isSinglePost }) => {
       console.log("handleDelete", error.message);
       setError(error.message);
     }
-    setLoadingDelete(false);
+    setDelLoading(false);
   };
 
   return (
@@ -52,15 +52,28 @@ const BottomIcons: React.FC<Props> = ({ post, isSinglePost }) => {
       )}
 
       <Flex justify="space-evenly" color="gray.500" fontWeight="600">
-        <PostIcon icon={BsChat} text={post.numberOfComments} />
+        {!isSinglePost && (
+          <PostIcon
+            icon={BsChat}
+            text={post.numberOfComments}
+            onClick={() => selectPost(post, true)}
+          />
+        )}
         <PostIcon icon={IoArrowRedoOutline} text="Share" />
-        <PostIcon icon={IoBookmarkOutline} text="Save" />
+
+        <PostIcon
+          icon={IoBookmarkOutline}
+          color={isSaved ? "orange.500" : "#718096"}
+          text={isSaved ? "Saved" : "Save"}
+          onClick={() => savePostIds(post.id)}
+        />
+
         {isCreator && (
           <PostIcon
             icon={AiOutlineDelete}
             text="Delete"
             onClick={handleDelete}
-            loading={loadingDelete}
+            loading={delLoading}
           />
         )}
       </Flex>

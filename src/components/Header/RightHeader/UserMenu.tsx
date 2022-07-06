@@ -3,6 +3,7 @@ import {
   Box,
   Flex,
   Icon,
+  Image,
   Menu,
   MenuButton,
   MenuDivider,
@@ -39,12 +40,23 @@ const UserMenu: React.FC<Props> = ({ user }) => {
           <Flex alignItems="center">
             {user ? (
               <>
-                <Icon
-                  fontSize={24}
-                  mr={1}
-                  color="gray.300"
-                  as={FaRedditSquare}
-                />
+                {user.photoURL ? (
+                  <Image
+                    src={user.photoURL}
+                    width="6"
+                    height="6"
+                    alt=""
+                    borderRadius="full"
+                    mr="2"
+                  />
+                ) : (
+                  <Icon
+                    fontSize={24}
+                    mr={2}
+                    color="gray.300"
+                    as={FaRedditSquare}
+                  />
+                )}
                 <Box
                   display={{ base: "none", lg: "flex" }}
                   flexDirection="column"

@@ -4,6 +4,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  documentId,
   getDoc,
   getDocs,
   limit,
@@ -26,7 +27,12 @@ import { useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import { modalState } from "../atoms/modalAtom";
-import { postState } from "../atoms/postAtom";
+import {
+  postsState,
+  postState,
+  postVotesState,
+  savedPostIdsState,
+} from "../atoms/postAtom";
 import { auth, firestore, storage } from "../firebase/clientApp";
 import { Post } from "../models/Post";
 import { CommunitySnippet } from "../models/User/CommunitySnippet";
@@ -35,123 +41,159 @@ import { PostVote } from "../models/User/PostVote";
 const usePost = () => {
   const router = useRouter();
   const [user] = useAuthState(auth);
-  const [postAtom, setPostAtom] = useRecoilState(postState);
   const setModalAtom = useSetRecoilState(modalState);
+  const setPost = useSetRecoilState(postState);
+  const [posts, setPosts] = useRecoilState(postsState);
+  const [postVotes, setPostVotes] = useRecoilState(postVotesState);
+  const [savedPostIds, setSavedPostIds] = useRecoilState(savedPostIdsState);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const getHomeFeed = async () => {
+  const getHomeFeed = async (sort: string) => {
     setLoading(true);
+
     try {
-      const postQuery = query(
+      const q = query(
         collection(firestore, "posts"),
-        orderBy("totalVote", "desc"),
+        orderBy(sort, "desc"),
         limit(10)
       );
 
-      const postDocs = await getDocs(postQuery);
+      const postDocs = await getDocs(q);
       const posts = postDocs.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
-      setPostAtom((prev) => ({
-        ...prev,
-        posts: posts as Post[],
-      }));
+      setPosts(posts as Post[]);
     } catch (error) {
       console.log("getNoUserHomeFeeds error", error);
     }
+
     setLoading(false);
   };
 
-  const getUserHomeFeed = async (communitySnippets: CommunitySnippet[]) => {
+  const getUserHomeFeed = async (
+    communitySnippets: CommunitySnippet[],
+    sort: string
+  ) => {
+    if (!communitySnippets?.length) return getHomeFeed(sort);
     setLoading(true);
+
     try {
-      if (communitySnippets.length) {
-        const myCommunityIds = communitySnippets.map(
-          (snippet) => snippet.communityId
-        );
+      const myCommunityIds = communitySnippets.map(
+        (snippet) => snippet.communityId
+      );
 
-        const postQuery = query(
-          collection(firestore, "posts"),
-          where("communityId", "in", myCommunityIds),
-          orderBy("totalVote", "desc"),
-          limit(10)
-        );
+      const q = query(
+        collection(firestore, "posts"),
+        where("communityId", "in", myCommunityIds),
+        orderBy(sort, "desc"),
+        limit(10)
+      );
 
-        const postDocs = await getDocs(postQuery);
-        const posts = postDocs.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        const postIds = postDocs.docs.map((doc) => doc.id);
+      const postDocs = await getDocs(q);
+      const posts = postDocs.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      const postIds = postDocs.docs.map((doc) => doc.id);
 
-        const postVotesQuery = query(
-          collection(firestore, `users/${user?.uid}/postVotes`),
-          where("postId", "in", postIds)
-        );
+      const q2 = query(
+        collection(firestore, `users/${user?.uid}/postVotes`),
+        where("postId", "in", postIds)
+      );
 
-        const postVotesDocs = await getDocs(postVotesQuery);
-        const postVotes = postVotesDocs.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+      const postVotesDocs = await getDocs(q2);
+      const postVotes = postVotesDocs.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
 
-        setPostAtom((prev) => ({
-          ...prev,
-          posts: posts as Post[],
-          postVotes: postVotes as PostVote[],
-        }));
-      }
+      setPosts(posts as Post[]);
+      setPostVotes(postVotes as PostVote[]);
     } catch (error) {
       console.log("getUserHomeFeeds error", error);
     }
+
     setLoading(false);
   };
 
   const getCommunityFeed = async (communtyId: string) => {
     setLoading(true);
+
     try {
-      const postsQuery = query(
+      const q = query(
         collection(firestore, "posts"),
         where("communityId", "==", communtyId),
         orderBy("createdAt", "desc")
       );
-      const postDocs = await getDocs(postsQuery);
+      const postDocs = await getDocs(q);
 
       const posts = postDocs.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
-      const postVotesQuery = query(
+      const q2 = query(
         collection(firestore, `users/${user?.uid}/postVotes`),
         where("communityId", "==", communtyId)
       );
-      const postVoteDocs = await getDocs(postVotesQuery);
+      const postVoteDocs = await getDocs(q2);
       const postVotes = postVoteDocs.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
 
-      setPostAtom((prev) => ({
-        ...prev,
-        posts: posts as Post[],
-        postVotes: postVotes as PostVote[],
-      }));
+      setPosts(posts as Post[]);
+      setPostVotes(postVotes as PostVote[]);
     } catch (error) {
       console.log("getFeeds error", error);
     }
+
+    setLoading(false);
+  };
+
+  const getBookmarkFeed = async (sort:string) => {
+    if (!savedPostIds?.length) return;
+    setLoading(true);
+
+    try {
+      const q = query(
+        collection(firestore, "posts"),
+        where(documentId(), "in", savedPostIds),
+      );
+
+      const postDocs = await getDocs(q);
+
+      const posts = postDocs.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+      const q2 = query(
+        collection(firestore, `users/${user?.uid}/postVotes`),
+        where("posts", "in", savedPostIds)
+      );
+      const postVoteDocs = await getDocs(q2);
+      const postVotes = postVoteDocs.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setPosts(posts as Post[]);
+      setPostVotes(postVotes as PostVote[]);
+    } catch (error) {
+      console.log("getFeeds error", error);
+    }
+
     setLoading(false);
   };
 
   const getPost = async (pid: string) => {
+    setLoading(true);
+
     try {
       const postDocRef = doc(firestore, "posts", pid);
       const postDoc = await getDoc(postDocRef);
 
-      setPostAtom((prev) => ({
-        ...prev,
-        selectedPost: { id: postDoc.id, ...postDoc.data() } as Post,
-      }));
+      setPost({ id: postDoc.id, ...postDoc.data() } as Post);
     } catch (error) {
       console.log("getPost error", error);
     }
+
+    setLoading(false);
   };
 
   const createPost = async (
@@ -163,6 +205,7 @@ const usePost = () => {
     const { communityId } = router.query;
 
     setLoading(true);
+
     try {
       //CREATE new Post
       const postDocRef = await addDoc(collection(firestore, "posts"), {
@@ -208,6 +251,40 @@ const usePost = () => {
     setLoading(true);
   };
 
+  const deletePost = async (post: Post): Promise<boolean> => {
+    try {
+      //check if image, delete firestorage if exists
+      if (post.imageURLs?.length) {
+        for (let i = 0; i < post.imageURLs.length; i++) {
+          const imageRef = ref(storage, `posts/${post.id}/image${i}`);
+          await deleteObject(imageRef);
+        }
+      }
+
+      //delete post doc from firestore
+      const postDocRef = doc(firestore, "posts", post.id);
+      await deleteDoc(postDocRef);
+
+      // update recoil state
+      setPosts((prev) => prev.filter((item) => item.id !== post.id));
+    } catch (error: any) {
+      console.log("onDeletePost Error", error.message);
+      return false;
+    }
+
+    return true;
+  };
+
+  const selectPost = (post: Post, onlyComment?: boolean) => {
+    setPost(post);
+    onlyComment
+      ? router.push({
+          pathname: `/r/${post.communityId}/${post.id}`,
+          query: { onlyComment: true },
+        })
+      : router.push(`/r/${post.communityId}/${post.id}`);
+  };
+
   //vote : 1(좋아요) or -1(싫어요)
   const onVote = async (post: Post, vote: 1 | -1) => {
     if (!user?.uid) {
@@ -217,12 +294,12 @@ const usePost = () => {
 
     try {
       const { totalVote, communityId } = post;
-      const existingPostVote = postAtom.postVotes.find(
+      const existingPostVote = postVotes.find(
         (postVote) => postVote.postId === post.id
       );
       const updatedPost = { ...post };
-      const updatedPosts = [...postAtom.posts];
-      let updatedPostVotes = [...postAtom.postVotes];
+      const updatedPosts = [...posts];
+      let updatedPostVotes = [...postVotes];
       let totalVoteChange: number = vote;
 
       const batch = writeBatch(firestore);
@@ -272,7 +349,7 @@ const usePost = () => {
 
           updatedPost.totalVote = totalVote + 2 * vote;
 
-          const voteIndex = postAtom.postVotes.findIndex(
+          const voteIndex = postVotes.findIndex(
             (vote) => vote.id === existingPostVote.id
           );
           // Vote was found --> findIndex , if not found --> returns -1
@@ -291,15 +368,12 @@ const usePost = () => {
       }
 
       // 2. UPDATE Post doc
-      const postIndex = postAtom.posts.findIndex((item) => item.id === post.id);
+      const postIndex = posts.findIndex((item) => item.id === post.id);
       updatedPosts[postIndex!] = updatedPost;
 
-      setPostAtom((prev) => ({
-        ...prev,
-        selectedPost: updatedPost,
-        posts: updatedPosts,
-        postVotes: updatedPostVotes,
-      }));
+      setPost(updatedPost);
+      setPosts(updatedPosts);
+      setPostVotes(updatedPostVotes);
 
       const postRef = doc(firestore, "posts", post.id);
       batch.update(postRef, { totalVote: totalVote + totalVoteChange });
@@ -310,51 +384,56 @@ const usePost = () => {
     }
   };
 
-  const onSelectPost = (post: Post) => {
-    setPostAtom((prev) => ({
-      ...prev,
-      selectedPost: post,
-    }));
-    router.push(`/r/${post.communityId}/${post.id}`);
-  };
+  const savePostIds = async (postId: string) => {
+    let updatedSavedPostIds = [];
 
-  const onDeletePost = async (post: Post): Promise<boolean> => {
     try {
-      //check if image, delete firestorage if exists
-      if (post.imageURLs?.length) {
-        for (let i = 0; i < post.imageURLs.length; i++) {
-          const imageRef = ref(storage, `posts/${post.id}/image${i}`);
-          await deleteObject(imageRef);
-        }
+      if (!savedPostIds?.length) {
+        await updateDoc(doc(firestore, `users/${user?.uid}`), {
+          savedPostIds: [postId],
+        });
+        setSavedPostIds([postId] as String[]);
+        return;
       }
 
-      //delete post doc from firestore
-      const postDocRef = doc(firestore, "posts", post.id);
-      await deleteDoc(postDocRef);
+      savedPostIds?.includes(postId)
+        ? (updatedSavedPostIds = savedPostIds?.filter((id) => id !== postId))
+        : (updatedSavedPostIds = [...savedPostIds, postId]);
 
-      // update recoil state
-      setPostAtom((prev) => ({
-        ...prev,
-        posts: prev.posts.filter((item) => item.id !== post.id),
-      }));
-    } catch (error: any) {
-      console.log("onDeletePost Error", error.message);
-      return false;
+      await updateDoc(doc(firestore, `users/${user?.uid}`), {
+        savedPostIds: updatedSavedPostIds,
+      });
+
+      setSavedPostIds(updatedSavedPostIds as String[]);
+    } catch (error) {
+      console.log("savePost error", error);
     }
+  };
 
-    return true;
+  const getSavedPostIds = async () => {
+    try {
+      const userInfo = await getDoc(doc(firestore, `users/${user?.uid}`));
+      setSavedPostIds(userInfo.data()?.savedPostIds);
+    } catch (error) {
+      console.log("getSavedPost error", error);
+    }
   };
 
   return {
     getHomeFeed,
     getUserHomeFeed,
     getCommunityFeed,
+    getBookmarkFeed,
     getPost,
     createPost,
+    deletePost,
+    selectPost,
     onVote,
-    onDeletePost,
-    onSelectPost,
-    postAtom,
+    savePostIds,
+    getSavedPostIds,
+    posts,
+    postVotes,
+    savedPostIds,
     loading,
     error,
   };

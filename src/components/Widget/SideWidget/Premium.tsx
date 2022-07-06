@@ -1,5 +1,5 @@
+import { Button, Flex, Icon, Stack, Text } from "@chakra-ui/react";
 import React from "react";
-import { Flex, Icon, Text, Stack, Button } from "@chakra-ui/react";
 import { GiCheckedShield } from "react-icons/gi";
 
 const Premium: React.FC = () => {
@@ -8,7 +8,6 @@ const Premium: React.FC = () => {
       direction="column"
       bg="white"
       borderRadius={4}
-      
       p="12px"
       border="1px solid"
       borderColor="gray.300"

@@ -1,11 +1,12 @@
 import { useRouter } from "next/router";
 import React, { useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { useSetRecoilState } from "recoil";
-import { communityState } from "../../atoms/communityAtom";
-import { postState } from "../../atoms/postAtom";
+import { useResetRecoilState } from "recoil";
+import { communitySnippetsState,isSnippetFetchedState } from "../../atoms/communityAtom";
+import { postVotesState, savedPostIdsState } from "../../atoms/postAtom";
 import { auth } from "../../firebase/clientApp";
 import useCommunity from "../../hooks/useCommunity";
+import usePost from "../../hooks/usePost";
 import Header from "../Header/Header";
 
 type Props = {
@@ -15,27 +16,26 @@ type Props = {
 const Layout: React.FC<Props> = ({ children }) => {
   const { communityId } = useRouter().query;
   const [user] = useAuthState(auth);
-  const setPostAtom = useSetRecoilState(postState);
-  const setCommunityAtom = useSetRecoilState(communityState);
+  const { getSavedPostIds } = usePost();
   const { getCommunitySnippets, getCommunity } = useCommunity();
+
+  const resetPostVotes = useResetRecoilState(postVotesState);
+  const resetSavedPostIds = useResetRecoilState(savedPostIdsState);
+  const resetCommunitySnippets = useResetRecoilState(communitySnippetsState);
+  const resetIsSnipeptFetched = useResetRecoilState(isSnippetFetchedState);
 
   useEffect(() => {
     //유저 없으면 Clear recoilState
     if (!user) {
-      setCommunityAtom((prev) => ({
-        ...prev,
-        communitySnippets: [],
-        isSnippetsFetched: false,
-      }));
-      setPostAtom((prev) => ({
-        ...prev,
-        postVotes: [],
-      }));
-
+      resetCommunitySnippets();
+      resetIsSnipeptFetched();
+      resetPostVotes();
+      resetSavedPostIds();
       return;
     }
 
     getCommunitySnippets();
+    getSavedPostIds();
   }, [user]);
 
   useEffect(() => {

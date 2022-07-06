@@ -5,11 +5,12 @@ import { IconType } from "react-icons";
 type Props = {
   icon: IconType;
   text: string | number;
+  color?:string;
   loading?: boolean;
   onClick?: () => void;
 };
 
-const PostIcon: React.FC<Props> = ({ icon, text, loading = false, onClick }) => {
+const PostIcon: React.FC<Props> = ({ icon, text, color, loading = false, onClick }) => {
   return (
     <Flex
       align="center"
@@ -17,6 +18,7 @@ const PostIcon: React.FC<Props> = ({ icon, text, loading = false, onClick }) => 
       width="full"
       p="8px 10px"
       borderRadius="4"
+      color={color}
       _hover={{ bg: "gray.200" }}
       cursor="pointer"
       onClick={onClick}

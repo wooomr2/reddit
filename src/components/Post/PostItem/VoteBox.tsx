@@ -1,28 +1,26 @@
 import { Flex, Icon, Text } from "@chakra-ui/react";
-import React from "react";
+import React, { useMemo } from "react";
 import {
-  IoArrowUpCircleSharp,
-  IoArrowUpCircleOutline,
-  IoArrowDownCircleSharp,
   IoArrowDownCircleOutline,
+  IoArrowDownCircleSharp,
+  IoArrowUpCircleOutline,
+  IoArrowUpCircleSharp
 } from "react-icons/io5";
-import { useRecoilValue } from "recoil";
-import { postState } from "../../../atoms/postAtom";
 import usePost from "../../../hooks/usePost";
 import { Post } from "../../../models/Post";
 
 type Props = {
   post: Post;
-  isSinglePost?:boolean
+  isSinglePost?: boolean;
 };
 
-const VoteBox: React.FC<Props> = ({ post,isSinglePost }) => {
-  const { onVote } = usePost();
-  const postVotes = useRecoilValue(postState).postVotes;
+const VoteBox: React.FC<Props> = ({ post, isSinglePost }) => {
+  const { onVote, postVotes } = usePost();
 
-  const userVote = postVotes.find(
-    (postVote) => postVote.postId === post.id
-  )?.vote;
+  const userVote = useMemo(
+    () => postVotes.find((postVote) => postVote.postId === post.id)?.vote,
+    [post, postVotes]
+  );
 
   return (
     <Flex

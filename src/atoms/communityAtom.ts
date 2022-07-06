@@ -1,35 +1,18 @@
-import { CommunitySnippet } from "./../models/User/CommunitySnippet";
 import { atom } from "recoil";
 import { Community } from "../models/Community";
+import { CommunitySnippet } from "./../models/User/CommunitySnippet";
 
-interface CommunityAtom {
-  communitySnippets: CommunitySnippet[];
-  currentCommunity?: Community;
-  isSnippetsFetched?: boolean;
-}
-
-const defaultCommunityState: CommunityAtom = {
-  communitySnippets: [],
-  isSnippetsFetched: false,
-};
-
-export const communityState = atom<CommunityAtom>({
+export const communityState = atom<Community | null>({
   key: "communityState",
-  default: defaultCommunityState,
+  default: null,
 });
 
-//////////////////////////따로관리하는게 어떤가
+export const communitySnippetsState = atom<CommunitySnippet[]>({
+  key: "communitySnippetsState",
+  default: [],
+});
 
-// export const currentCommunityState = atom<Community>({
-//   key: "communityState",
-// });
-
-// export const communitySnippetsState = atom<CommunitySnippet[]>({
-//   key: "communitySnippetsState",
-//   default: [],
-// });
-
-// export const isSnippetsFetchedState = atom<Boolean>({
-//   key: "isSnippetsFetchedState",
-//   default: false,
-// });
+export const isSnippetFetchedState = atom<Boolean>({
+  key: "isSnippetFetchedState",
+  default: false,
+});

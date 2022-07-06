@@ -16,7 +16,7 @@ type Props = {
 };
 
 const PostItem: React.FC<Props> = ({ post, isHomePage, isSinglePost }) => {
-  const { onSelectPost } = usePost();
+  const { selectPost } = usePost();
   const [loadingImage, setLoadingImage] = useState(true);
 
   return (
@@ -72,7 +72,7 @@ const PostItem: React.FC<Props> = ({ post, isHomePage, isSinglePost }) => {
           <Stack
             direction="column"
             cursor={isSinglePost ? "default" : "pointer"}
-            onClick={() => !isSinglePost && onSelectPost(post)}
+            onClick={() => !isSinglePost && selectPost(post)}
           >
             <Text fontSize="12pt" fontWeight="600">
               {post.title}
