@@ -19,12 +19,23 @@ const BottomIcons: React.FC<Props> = ({ post, isSinglePost }) => {
   const [user] = useAuthState(auth);
   const [delLoading, setDelLoading] = useState(false);
   const [error, setError] = useState("");
-  const { deletePost, selectPost, savePostIds, savedPostIds } = usePost();
+  const {
+    deletePost,
+    selectPost,
+    savePostIds,
+    savedPostIds,
+    sharedPostIds,
+    sharePostIds,
+  } = usePost();
 
   const isCreator = user?.uid === post.creatorId;
   const isSaved = useMemo(
     () => savedPostIds?.includes(post.id),
     [post, savedPostIds]
+  );
+  const isShared = useMemo(
+    () => sharedPostIds?.includes(post.id),
+    [post, sharedPostIds]
   );
 
   const handleDelete = async () => {
@@ -59,7 +70,12 @@ const BottomIcons: React.FC<Props> = ({ post, isSinglePost }) => {
             onClick={() => selectPost(post, true)}
           />
         )}
-        <PostIcon icon={IoArrowRedoOutline} text="Share" />
+        <PostIcon
+          icon={IoArrowRedoOutline}
+          color={isShared ? "blue.500" : "#718096"}
+          text={isShared ? "Shared" : "Share"}
+          onClick={() => sharePostIds(post.id)}
+        />
 
         <PostIcon
           icon={IoBookmarkOutline}

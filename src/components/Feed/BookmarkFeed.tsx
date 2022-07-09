@@ -26,7 +26,7 @@ const BookmarkFeed: React.FC<Props> = () => {
   return (
     <Stack>
       {posts.map((post, i) => (
-        <PostItem key={post.id} post={post} />
+        <PostItem key={i} post={post} />
       ))}
     </Stack>
   );

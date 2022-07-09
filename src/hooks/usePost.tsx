@@ -4,23 +4,26 @@ import {
   collection,
   deleteDoc,
   doc,
+  DocumentData,
   documentId,
   getDoc,
   getDocs,
   limit,
   orderBy,
   query,
+  QueryDocumentSnapshot,
   serverTimestamp,
+  startAfter,
   Timestamp,
   updateDoc,
   where,
-  writeBatch,
+  writeBatch
 } from "firebase/firestore";
 import {
   deleteObject,
   getDownloadURL,
   ref,
-  uploadString,
+  uploadString
 } from "firebase/storage";
 import { useRouter } from "next/router";
 import { useState } from "react";
@@ -32,6 +35,7 @@ import {
   postState,
   postVotesState,
   savedPostIdsState,
+  sharedPostIdsState
 } from "../atoms/postAtom";
 import { auth, firestore, storage } from "../firebase/clientApp";
 import { Post } from "../models/Post";
@@ -46,23 +50,51 @@ const usePost = () => {
   const [posts, setPosts] = useRecoilState(postsState);
   const [postVotes, setPostVotes] = useRecoilState(postVotesState);
   const [savedPostIds, setSavedPostIds] = useRecoilState(savedPostIdsState);
+  const [sharedPostIds, setSharedPostIds] = useRecoilState(sharedPostIdsState);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [last, setLast] = useState<QueryDocumentSnapshot<DocumentData>>();
 
-  const getHomeFeed = async (sort: string) => {
+  const getVisitorHomeFeed = async (sort: string, page: number) => {
     setLoading(true);
 
+    let snapshot;
+
     try {
-      const q = query(
-        collection(firestore, "posts"),
-        orderBy(sort, "desc"),
-        limit(10)
-      );
+      if (page === 1) {
+        const fisrtQuery = query(
+          collection(firestore, "posts"),
+          orderBy(sort, "desc"),
+          limit(10)
+        );
 
-      const postDocs = await getDocs(q);
-      const posts = postDocs.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        snapshot = await getDocs(fisrtQuery);
 
-      setPosts(posts as Post[]);
+        setLast(snapshot.docs[snapshot.docs.length - 1]);
+
+        const posts = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setPosts(posts as Post[]);
+        return setLoading(false);
+      } else {
+        const nextQuery = query(
+          collection(firestore, "posts"),
+          orderBy(sort, "desc"),
+          startAfter(last),
+          limit(10)
+        );
+
+        snapshot = await getDocs(nextQuery);
+
+        setLast(snapshot.docs[snapshot.docs.length - 1]);
+      }
+
+      const posts = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+      setPosts((prev) => prev.concat(posts as Post[]));
     } catch (error) {
       console.log("getNoUserHomeFeeds error", error);
     }
@@ -70,31 +102,73 @@ const usePost = () => {
     setLoading(false);
   };
 
-  const getUserHomeFeed = async (
+  const getHomeFeed = async (
     communitySnippets: CommunitySnippet[],
-    sort: string
+    sort: string,
+    page: number
   ) => {
-    if (!communitySnippets?.length) return getHomeFeed(sort);
-    setLoading(true);
+    if (!communitySnippets?.length) return getVisitorHomeFeed(sort, page);
 
+    setLoading(true);
     try {
       const myCommunityIds = communitySnippets.map(
         (snippet) => snippet.communityId
       );
 
-      const q = query(
-        collection(firestore, "posts"),
-        where("communityId", "in", myCommunityIds),
-        orderBy(sort, "desc"),
-        limit(10)
-      );
+      let snapshot;
 
-      const postDocs = await getDocs(q);
-      const posts = postDocs.docs.map((doc) => ({
+      if (page === 1) {
+        const firstQuery = query(
+          collection(firestore, "posts"),
+          where("communityId", "in", myCommunityIds),
+          orderBy(sort, "desc"),
+          limit(10)
+        );
+
+        snapshot = await getDocs(firstQuery);
+
+        setLast(snapshot.docs[snapshot.docs.length - 1]);
+
+        const posts = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        const postIds = snapshot.docs.map((doc) => doc.id);
+
+        const q2 = query(
+          collection(firestore, `users/${user?.uid}/postVotes`),
+          where("postId", "in", postIds)
+        );
+
+        const postVotesDocs = await getDocs(q2);
+        const postVotes = postVotesDocs.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setPosts(posts as Post[]);
+        setPostVotes(postVotes as PostVote[]);
+
+        return setLoading(false);
+      } else {
+        const nextQuery = query(
+          collection(firestore, "posts"),
+          where("communityId", "in", myCommunityIds),
+          orderBy(sort, "desc"),
+          startAfter(last),
+          limit(10)
+        );
+
+        snapshot = await getDocs(nextQuery);
+
+        setLast(snapshot.docs[snapshot.docs.length - 1]);
+      }
+
+      const posts = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-      const postIds = postDocs.docs.map((doc) => doc.id);
+      const postIds = snapshot.docs.map((doc) => doc.id);
 
       const q2 = query(
         collection(firestore, `users/${user?.uid}/postVotes`),
@@ -107,8 +181,8 @@ const usePost = () => {
         ...doc.data(),
       }));
 
-      setPosts(posts as Post[]);
-      setPostVotes(postVotes as PostVote[]);
+      setPosts((prev) => prev.concat(posts as Post[]));
+      setPostVotes((prev) => prev.concat(postVotes as PostVote[]));
     } catch (error) {
       console.log("getUserHomeFeeds error", error);
     }
@@ -148,14 +222,14 @@ const usePost = () => {
     setLoading(false);
   };
 
-  const getBookmarkFeed = async (sort:string) => {
+  const getBookmarkFeed = async (sort: string) => {
     if (!savedPostIds?.length) return;
     setLoading(true);
 
     try {
       const q = query(
         collection(firestore, "posts"),
-        where(documentId(), "in", savedPostIds),
+        where(documentId(), "in", savedPostIds)
       );
 
       const postDocs = await getDocs(q);
@@ -419,9 +493,44 @@ const usePost = () => {
     }
   };
 
+  const sharePostIds = async (postId: string) => {
+    let updatedSharedPostIds = [];
+
+    try {
+      if (!sharedPostIds?.length) {
+        await updateDoc(doc(firestore, `users/${user?.uid}`), {
+          sharedPostIds: [postId],
+        });
+        setSharedPostIds([postId] as String[]);
+        return;
+      }
+
+      sharedPostIds?.includes(postId)
+        ? (updatedSharedPostIds = sharedPostIds?.filter((id) => id !== postId))
+        : (updatedSharedPostIds = [...sharedPostIds, postId]);
+
+      await updateDoc(doc(firestore, `users/${user?.uid}`), {
+        sharedPostIds: updatedSharedPostIds,
+      });
+
+      setSharedPostIds(updatedSharedPostIds as String[]);
+    } catch (error) {
+      console.log("sharedPost error", error);
+    }
+  };
+
+  const getSharedPostIds = async () => {
+    try {
+      const userInfo = await getDoc(doc(firestore, `users/${user?.uid}`));
+      setSharedPostIds(userInfo.data()?.sharedPostIds);
+    } catch (error) {
+      console.log("getSharedPost error", error);
+    }
+  };
+
+
   return {
     getHomeFeed,
-    getUserHomeFeed,
     getCommunityFeed,
     getBookmarkFeed,
     getPost,
@@ -431,11 +540,15 @@ const usePost = () => {
     onVote,
     savePostIds,
     getSavedPostIds,
+    sharePostIds,
+    getSharedPostIds,
     posts,
     postVotes,
     savedPostIds,
+    sharedPostIds,
     loading,
     error,
+    last,
   };
 };
 

@@ -22,3 +22,9 @@ export const savedPostIdsState = atom<String[]>({
   key: "savedPostIdsState",
   default: [],
 });
+
+export const sharedPostIdsState = atom<String[]>({
+  key: "sharedPostIdsState",
+  default: [],
+});
+

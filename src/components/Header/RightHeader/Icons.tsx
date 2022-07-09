@@ -5,7 +5,7 @@ import { BsArrowLeftCircle, BsChatDots } from "react-icons/bs";
 import {
   IoBookmarksOutline,
   IoNotificationsOutline,
-  IoVideocamOutline
+  IoVideocamOutline,
 } from "react-icons/io5";
 import HeaderIcon from "../../UI/Icon/HeaderIcon";
 
@@ -21,11 +21,7 @@ const Icons: React.FC = () => {
         borderColor="gray.200"
       >
         <HeaderIcon icon={BsArrowLeftCircle} onClick={() => router.back()} />
-        <HeaderIcon
-          icon={IoBookmarksOutline}
-          size={18}
-          onClick={() => router.push(`/bookmark`)}
-        />
+
         <HeaderIcon
           icon={IoVideocamOutline}
           size={22}
@@ -34,8 +30,14 @@ const Icons: React.FC = () => {
       </Box>
 
       <>
+
         <HeaderIcon icon={BsChatDots} />
         <HeaderIcon icon={IoNotificationsOutline} />
+        <HeaderIcon
+          icon={IoBookmarksOutline}
+          size={18}
+          onClick={() => router.push(`/bookmark`)}
+        />
       </>
     </Flex>
   );

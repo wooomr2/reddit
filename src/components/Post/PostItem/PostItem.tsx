@@ -13,9 +13,10 @@ type Props = {
   post: Post;
   isHomePage?: boolean;
   isSinglePost?: boolean;
+  isSSR?:boolean;
 };
 
-const PostItem: React.FC<Props> = ({ post, isHomePage, isSinglePost }) => {
+const PostItem: React.FC<Props> = ({ post, isHomePage, isSinglePost, isSSR }) => {
   const { selectPost } = usePost();
   const [loadingImage, setLoadingImage] = useState(true);
 
@@ -81,7 +82,7 @@ const PostItem: React.FC<Props> = ({ post, isHomePage, isSinglePost }) => {
 
             {post.imageURLs?.length && (
               <Flex direction="column" justify="center" align="center">
-                {loadingImage && (
+                {!isSSR && loadingImage && (
                   <Skeleton height="300px" width="100%" borderRadius="4" />
                 )}
                 {post.imageURLs.map((imgURL, i) => (
