@@ -21,7 +21,6 @@ const Icons: React.FC = () => {
         borderColor="gray.200"
       >
         <HeaderIcon icon={BsArrowLeftCircle} onClick={() => router.back()} />
-
         <HeaderIcon
           icon={IoVideocamOutline}
           size={22}

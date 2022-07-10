@@ -21,7 +21,7 @@ const CommunityPage: React.FC = () => {
         {/* Left */}
         <>
           <CreatePostWidget />
-          <CommunityFeed community={community} />
+          <CommunityFeed/>
         </>
 
         {/* Right */}

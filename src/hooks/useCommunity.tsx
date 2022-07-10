@@ -40,7 +40,7 @@ const useCommunity = () => {
 
   const getCommunitySnippets = async () => {
     setLoadingSnippets(true);
-    console.log("겟커뮤니티스니펫")
+
     try {
       const snippetDocs = await getDocs(
         collection(firestore, `users/${user?.uid}/communitySnippets`)
@@ -53,6 +53,7 @@ const useCommunity = () => {
       console.log("getCommunitySnippets error", error);
       setError(error.message);
     }
+    
     setLoadingSnippets(false);
   };
 
@@ -129,7 +130,7 @@ const useCommunity = () => {
 
       setCommunitySnippets((prev) => [...prev, newSnippet]);
 
-      router.push(`r/${communityName}`);
+      router.push(`/r/${communityName}`);
 
       handleClose();
     } catch (error: any) {
