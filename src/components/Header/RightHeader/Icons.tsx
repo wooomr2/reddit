@@ -24,7 +24,7 @@ const Icons: React.FC = () => {
         <HeaderIcon
           icon={IoVideocamOutline}
           size={22}
-          onClick={() => router.push(`https://netflix-wooomr2.vercel.app`)}
+          onClick={() => router.push(`https://netflix-woomr815.vercel.app`)}
         />
       </Box>
 
