@@ -235,10 +235,11 @@ const usePost = () => {
       const postDocs = await getDocs(q);
 
       const posts = postDocs.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const postIds = postDocs.docs.map((doc) => doc.id);
 
       const q2 = query(
         collection(firestore, `users/${user?.uid}/postVotes`),
-        where("posts", "in", savedPostIds)
+        where("postId", "in", postIds)
       );
       const postVoteDocs = await getDocs(q2);
       const postVotes = postVoteDocs.docs.map((doc) => ({
