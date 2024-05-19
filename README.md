@@ -42,10 +42,3 @@ User Collection 내에 communitySnippets subCollection을 두는 방식으로 �
 Authentication, Storage와 연동시 일괄 batch 기능 지원 x
 
 3. Authentication의 user정보와 firestore 분리되어 있음 --> trigger function 별도 생성하여 firestore에 user정보 연동 필요
-
-### 장점
-1. Backend 코드 없이 cloud console에서 관리 가능
-
-2. front 중심의 개발 && app개발에서 효율적일듯
-
-3. 다양한 Extension 연동
