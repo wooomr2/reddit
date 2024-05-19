@@ -8,15 +8,7 @@ https://reddit-woomr815.vercel.app
 ![Chakra](https://img.shields.io/badge/chakra-%234ED1C5.svg?style=for-the-badge&logo=chakraui&logoColor=white)
 
 * 상태관리  Recoil
-* firebase ( Function / 보안규칙 / Admin )
-
-
-## 프로젝트 목표
-- TypeScript / ChakraUI 적용
-- Component 분리 & 재사용 적극 고려
-- firebase사용시에도 backend 로직 분리해보기(Collection 별로 customHook에서 별도 관리)
-
-## firebase
+## firebase ( Function / 보안규칙 / Admin )
 1. 설계 User Collection 내에 communitySnippets subCollection을 두는 방식
 
 2. 페이징 : Snapshot 쿼리 커서의 끝점을 저장 후 다음처리의 시작점으로 재활용하는 방식
