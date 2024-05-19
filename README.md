@@ -16,18 +16,8 @@ https://reddit-woomr815.vercel.app
 - Component 분리 & 재사용 적극 고려
 - firebase사용시에도 backend 로직 분리해보기(Collection 별로 customHook에서 별도 관리)
 
-
-## firebase 사용후기
-1. 기존 관계형과 다른 구조로 DB 설계
-- ex)
-- SQL)
-UserCommunity
-  id PK
-  userId FK
-  communityId FK
-
-- Firebase)
-User Collection 내에 communitySnippets subCollection을 두는 방식으로 설계
+## firebase
+1. 설계 User Collection 내에 communitySnippets subCollection을 두는 방식
 
 2. 페이징 : Snapshot 쿼리 커서의 끝점을 저장 후 다음처리의 시작점으로 재활용하는 방식
 
