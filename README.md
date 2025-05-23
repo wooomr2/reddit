@@ -8,4 +8,3 @@ https://reddit-woomr815.vercel.app
 ![Chakra](https://img.shields.io/badge/chakra-%234ED1C5.svg?style=for-the-badge&logo=chakraui&logoColor=white)
 
 * 상태관리  Recoil
-## firebase ( Function / 보안규칙 / Admin )
